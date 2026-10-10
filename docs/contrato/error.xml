@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cualquier endpoint: 404 si el catálogo no existe, 400 si th/quantum no son positivos -->
+<Error codigo="404">
+  <Mensaje>No existe el catálogo con id 99.</Mensaje>
+</Error>

@@ -1,0 +1,36 @@
+name: Tarea de módulo
+description: Trabajo de un módulo del plan (M0–M8)
+labels: []
+body:
+  - type: dropdown
+    id: modulo
+    attributes:
+      label: Módulo
+      options: [M0, M1, M2, M3, M4, M5, M6, M7, M8]
+    validations:
+      required: true
+  - type: input
+    id: agente
+    attributes:
+      label: Agente dueño
+      placeholder: backend | desktop | motor | frontend | qa | humano
+  - type: textarea
+    id: alcance
+    attributes:
+      label: Alcance
+      description: Qué se entrega. Referencia la sección de CONTEXT.md.
+    validations:
+      required: true
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Criterios de aceptación
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: input
+    id: depende
+    attributes:
+      label: Depende de
+      placeholder: "#3, #4"

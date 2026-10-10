@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- GET /api/catalogos/1/procesos -->
+<Catalogo id="1" numero="1" nombre="Prueba CPU" fecha="2026-10-11T10:30:00" criterio="CPU" cantidad="3">
+  <Proceso>
+    <Pid>4120</Pid>
+    <Nombre>WINWORD</Nombre>
+    <Usuario>juan</Usuario>
+    <Descripcion>Microsoft Word</Descripcion>
+    <Prioridad>0</Prioridad>
+  </Proceso>
+  <Proceso>
+    <Pid>812</Pid>
+    <Nombre>svchost</Nombre>
+    <Usuario>SYSTEM</Usuario>
+    <Descripcion>Host Process for Windows Services</Descripcion>
+    <Prioridad>1</Prioridad>
+  </Proceso>
+  <Proceso>
+    <Pid>9932</Pid>
+    <Nombre>chrome</Nombre>
+    <Usuario>juan</Usuario>
+    <Descripcion>Google Chrome</Descripcion>
+    <Prioridad>0</Prioridad>
+  </Proceso>
+</Catalogo>

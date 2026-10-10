@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SimuladorProcesos.Core\SimuladorProcesos.Core.csproj" />
+  </ItemGroup>
+
+  <!-- Los ejemplos del contrato son la referencia: las pruebas los deserializan tal cual. -->
+  <ItemGroup>
+    <None Include="..\..\docs\contrato\*.xml" Link="contrato\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

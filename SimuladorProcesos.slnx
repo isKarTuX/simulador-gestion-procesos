@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SimuladorProcesos.Api/SimuladorProcesos.Api.csproj" />
+    <Project Path="src/SimuladorProcesos.Core/SimuladorProcesos.Core.csproj" />
+    <Project Path="src/SimuladorProcesos.Data/SimuladorProcesos.Data.csproj" />
+    <Project Path="src/SimuladorProcesos.Desktop/SimuladorProcesos.Desktop.csproj" />
+    <Project Path="src/SimuladorProcesos.Engine/SimuladorProcesos.Engine.csproj" />
+    <Project Path="src/SimuladorProcesos.Web/SimuladorProcesos.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SimuladorProcesos.Api.Tests/SimuladorProcesos.Api.Tests.csproj" />
+    <Project Path="tests/SimuladorProcesos.Core.Tests/SimuladorProcesos.Core.Tests.csproj" />
+    <Project Path="tests/SimuladorProcesos.Engine.Tests/SimuladorProcesos.Engine.Tests.csproj" />
+  </Folder>
+</Solution>

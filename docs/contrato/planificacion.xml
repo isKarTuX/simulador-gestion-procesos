@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- GET /api/planificacion/1?th=100&quantum=5   (th y quantum opcionales; por defecto 100 y 5) -->
+<Planificacion catalogoId="1" algoritmo="RoundRobin">
+  <TH>100</TH>
+  <Quantum>5</Quantum>
+  <Proceso pid="4120" nombre="WINWORD" caracteres="14" rafagaMs="1400" prioridad="0" />
+  <Proceso pid="812" nombre="svchost" caracteres="33" rafagaMs="3300" prioridad="1" />
+  <Proceso pid="9932" nombre="chrome" caracteres="13" rafagaMs="1300" prioridad="0" />
+</Planificacion>

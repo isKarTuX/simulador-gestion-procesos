@@ -1,0 +1,35 @@
+:root {
+    --listos: #2f5bea;
+    --ejecucion: #1f8f3a;
+    --espera: #8a8a8a;
+    --terminado: #d93636;
+    --tarjeta: #138a13;
+}
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    color: #1d1d1f;
+    background: #fafafa;
+}
+
+.encabezado {
+    display: flex;
+    gap: 1rem;
+    align-items: baseline;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid #e3e3e3;
+    background: #fff;
+}
+
+.marca { font-weight: 600; font-size: 1.1rem; }
+.subtitulo { color: #6b6b6b; }
+.contenido { padding: 1.5rem 2rem; }
+.pendiente { color: #6b6b6b; }
+
+.banda h2 { margin: 1rem 0 .25rem; font-weight: 400; }
+.banda { border-bottom: 1px solid #d0d0d0; min-height: 4rem; }
+.listos h2 { color: var(--listos); }
+.ejecucion h2 { color: var(--ejecucion); }
+.espera h2 { color: var(--espera); }
+.terminado h2 { color: var(--terminado); }

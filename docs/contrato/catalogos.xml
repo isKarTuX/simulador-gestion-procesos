@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- GET /api/catalogos -->
+<Catalogos>
+  <Catalogo id="1" numero="1" nombre="Prueba CPU" fecha="2026-10-11T10:30:00" criterio="CPU" cantidad="3" />
+  <Catalogo id="2" numero="7" nombre="Prueba memoria" fecha="2026-10-11T11:00:00" criterio="MEMORIA" cantidad="5" />
+</Catalogos>

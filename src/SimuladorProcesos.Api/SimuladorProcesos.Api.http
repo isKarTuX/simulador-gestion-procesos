@@ -1,0 +1,18 @@
+# Peticiones de prueba del servicio REST XML (VS Code REST Client / Visual Studio / Rider).
+@api = http://localhost:5080
+
+### Listar catálogos
+GET {{api}}/api/catalogos
+Accept: application/xml
+
+### Procesos de un catálogo
+GET {{api}}/api/catalogos/1/procesos
+Accept: application/xml
+
+### Planificación con TH y quantum
+GET {{api}}/api/planificacion/1?th=100&quantum=5
+Accept: application/xml
+
+### Catálogo inexistente → 404 <Error>
+GET {{api}}/api/catalogos/99999/procesos
+Accept: application/xml

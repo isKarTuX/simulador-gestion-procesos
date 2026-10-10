@@ -1,0 +1,39 @@
+# --- .NET ---
+bin/
+obj/
+*.user
+*.suo
+*.userprefs
+.vs/
+.vscode/*
+!.vscode/extensions.json
+*.rsuser
+TestResults/
+coverage*/
+*.coverage
+*.trx
+publish/
+artifacts/
+
+# --- Rider / otros IDE ---
+.idea/
+*.DotSettings.user
+
+# --- Datos locales del simulador ---
+*.db
+*.db-shm
+*.db-wal
+actividad/
+data/
+
+# --- Material del curso (no se publica: solo uso local) ---
+docs/enunciado/*.pdf
+
+# --- Claude Code: estado local ---
+.claude/settings.local.json
+.claude/worktrees/
+
+# --- SO ---
+Thumbs.db
+Desktop.ini
+.DS_Store

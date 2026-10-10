@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Compilar y probar
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restaurar
+        run: dotnet restore SimuladorProcesos.slnx
+
+      - name: Formato
+        run: dotnet format SimuladorProcesos.slnx --verify-no-changes --no-restore
+
+      - name: Compilar
+        run: dotnet build SimuladorProcesos.slnx --no-restore -c Release
+
+      - name: Probar
+        run: dotnet test SimuladorProcesos.slnx --no-build -c Release --logger "trx" --results-directory TestResults
+
+      - name: Publicar resultados de pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-pruebas
+          path: TestResults
