@@ -81,7 +81,9 @@ public class TormentaApiPublicaTests
 
         Assert.Equal(reporteEsperado, simulador.ObtenerReporte());
         Assert.All(procesos, p => Assert.Equal(p.Descripcion, destino.Texto(p.Pid)));
-        Assert.DoesNotContain(simulador.Hilos, h => h.IsAlive);
+
+        // Join acotado en vez de IsAlive: un hilo que acaba de terminar puede seguir marcado vivo unos instantes y eso no es una fuga.
+        Assert.All(simulador.Hilos, h => Assert.True(h.Join(_espera), $"El hilo {h.Name} no terminó."));
     }
 
     // Las operaciones de control solo pueden responder InvalidOperationException (llegaron en mal estado);

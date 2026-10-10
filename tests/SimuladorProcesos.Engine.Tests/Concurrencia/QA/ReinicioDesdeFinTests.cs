@@ -61,7 +61,9 @@ public class ReinicioDesdeFinTests
         Assert.Equal(EstadoSimulacion.Detenida, simulador.Estado);
         Assert.Equal(0, simulador.ObtenerInstantanea().RelojMs);
         Assert.Empty(simulador.ObtenerReporte());
-        Assert.DoesNotContain(hilos, h => h.IsAlive);
+
+        // Join acotado en vez de IsAlive: un hilo que acaba de terminar puede seguir marcado vivo unos instantes y eso no es una fuga.
+        Assert.All(hilos, h => Assert.True(h.Join(_espera), $"El hilo {h.Name} no terminó tras Reiniciar desde el handler."));
 
         EjecutarHastaElFinal(simulador);
 
@@ -69,6 +71,8 @@ public class ReinicioDesdeFinTests
         Assert.Equal(2, Volatile.Read(ref avisos));
         Assert.Equal(reporteEsperado, simulador.ObtenerReporte());
         Assert.All(procesos, p => Assert.Equal(p.Descripcion, destino.Texto(p.Pid)));
-        Assert.DoesNotContain(simulador.Hilos, h => h.IsAlive);
+
+        // Join acotado en vez de IsAlive: un hilo que acaba de terminar puede seguir marcado vivo unos instantes y eso no es una fuga.
+        Assert.All(simulador.Hilos, h => Assert.True(h.Join(_espera), $"El hilo {h.Name} no terminó."));
     }
 }
