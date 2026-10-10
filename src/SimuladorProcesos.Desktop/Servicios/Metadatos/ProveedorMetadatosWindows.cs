@@ -106,7 +106,8 @@ public sealed class ProveedorMetadatosWindows : IProveedorMetadatos
     {
         try
         {
-            var consulta = "SELECT ProcessId, ExecutablePath FROM Win32_Process WHERE ProcessId = "
+            // SELECT * y no una lista de columnas: el objeto parcial pierde __PATH y GetOwner lanza InvalidOperationException.
+            var consulta = "SELECT * FROM Win32_Process WHERE ProcessId = "
                 + pid.ToString(CultureInfo.InvariantCulture);
             using var buscador = new ManagementObjectSearcher(consulta);
             using var resultados = buscador.Get();

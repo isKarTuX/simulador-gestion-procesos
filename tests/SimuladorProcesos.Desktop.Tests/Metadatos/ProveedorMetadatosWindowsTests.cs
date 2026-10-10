@@ -53,45 +53,6 @@ public class ProveedorMetadatosWindowsTests(ITestOutputHelper salida)
     }
 
     [Fact]
-    public void DIAGNOSTICO_temporal_wmi()
-    {
-        var sb = new System.Text.StringBuilder();
-        try
-        {
-            using var b = new System.Management.ManagementObjectSearcher(
-                $"SELECT ProcessId, ExecutablePath FROM Win32_Process WHERE ProcessId = {Environment.ProcessId}");
-            using var r = b.Get();
-            var n = 0;
-            foreach (var o in r)
-            {
-                n++;
-                sb.AppendLine($"fila tipo={o.GetType()} path={(o as System.Management.ManagementObject)?.Path} ruta={o["ExecutablePath"]}");
-                try
-                {
-                    using var s = ((System.Management.ManagementObject)o).InvokeMethod("GetOwner", null, null);
-                    sb.AppendLine($"salida null={s is null}");
-                    if (s is not null)
-                    {
-                        sb.AppendLine($"ReturnValue={s["ReturnValue"]} ({s["ReturnValue"]?.GetType()}) Domain={s["Domain"]} User={s["User"]}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    sb.AppendLine("GetOwner lanzo: " + ex);
-                }
-            }
-
-            sb.AppendLine($"filas={n}");
-        }
-        catch (Exception ex)
-        {
-            sb.AppendLine("consulta lanzo: " + ex);
-        }
-
-        Assert.Fail(sb.ToString());
-    }
-
-    [Fact]
     [Trait("Category", "Medicion")]
     public void Mide_cuanto_tardan_20_consultas_WMI()
     {
