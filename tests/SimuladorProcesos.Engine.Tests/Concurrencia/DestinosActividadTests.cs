@@ -19,6 +19,17 @@ public class DestinosActividadTests : IDisposable
         }
     }
 
+    // Se lee con FileShare.ReadWrite|Delete como un lector real: File.ReadAllText usa FileShare.Read y en Windows choca con el escritor abierto.
+    private static byte[] LeerBytes(string ruta)
+    {
+        using var flujo = new FileStream(ruta, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        using var memoria = new MemoryStream();
+        flujo.CopyTo(memoria);
+        return memoria.ToArray();
+    }
+
+    private static string LeerTexto(string ruta) => Encoding.UTF8.GetString(LeerBytes(ruta));
+
     [Theory]
     [InlineData("notepad", 10, "notepad_10.txt")]
     [InlineData("chrome.exe", 4321, "chrome_4321.txt")]
@@ -52,8 +63,8 @@ public class DestinosActividadTests : IDisposable
         foreach (var c in "hola") { destino.Escribir(1, "uno.exe", c); }
         foreach (var c in "ñandú") { destino.Escribir(2, "dos", c); }
 
-        Assert.Equal("hola", File.ReadAllText(Path.Combine(_carpeta, "uno_1.txt")));
-        Assert.Equal(Encoding.UTF8.GetBytes("ñandú"), File.ReadAllBytes(Path.Combine(_carpeta, "dos_2.txt")));
+        Assert.Equal("hola", LeerTexto(Path.Combine(_carpeta, "uno_1.txt")));
+        Assert.Equal(Encoding.UTF8.GetBytes("ñandú"), LeerBytes(Path.Combine(_carpeta, "dos_2.txt")));
     }
 
     [Fact]
@@ -64,7 +75,7 @@ public class DestinosActividadTests : IDisposable
 
         foreach (var c in descripcion) { destino.Escribir(3, "emoji", c); }
 
-        Assert.Equal(Encoding.UTF8.GetBytes(descripcion), File.ReadAllBytes(Path.Combine(_carpeta, "emoji_3.txt")));
+        Assert.Equal(Encoding.UTF8.GetBytes(descripcion), LeerBytes(Path.Combine(_carpeta, "emoji_3.txt")));
     }
 
     [Fact]
@@ -75,7 +86,7 @@ public class DestinosActividadTests : IDisposable
         destino.Escribir(4, "vivo", 'x');
         destino.Escribir(4, "vivo", 'y');
 
-        Assert.Equal("xy", File.ReadAllText(Path.Combine(_carpeta, "vivo_4.txt")));
+        Assert.Equal("xy", LeerTexto(Path.Combine(_carpeta, "vivo_4.txt")));
     }
 
     [Fact]
@@ -87,7 +98,7 @@ public class DestinosActividadTests : IDisposable
         destino.NuevaCorrida();
         foreach (var c in "nuevo") { destino.Escribir(1, "p", c); }
 
-        Assert.Equal("nuevo", File.ReadAllText(Path.Combine(_carpeta, "p_1.txt")));
+        Assert.Equal("nuevo", LeerTexto(Path.Combine(_carpeta, "p_1.txt")));
     }
 
     [Fact]
@@ -128,8 +139,8 @@ public class DestinosActividadTests : IDisposable
             EjecutarHastaElFinal(simulador);
         }
 
-        Assert.Equal("abcdef", File.ReadAllText(Path.Combine(_carpeta, NombreArchivoActividad.Para("Ana.exe", procesos[0].Pid))));
-        Assert.Equal("ghij😀", File.ReadAllText(Path.Combine(_carpeta, NombreArchivoActividad.Para("Beto", procesos[1].Pid))));
+        Assert.Equal("abcdef", LeerTexto(Path.Combine(_carpeta, NombreArchivoActividad.Para("Ana.exe", procesos[0].Pid))));
+        Assert.Equal("ghij😀", LeerTexto(Path.Combine(_carpeta, NombreArchivoActividad.Para("Beto", procesos[1].Pid))));
         Assert.False(File.Exists(Path.Combine(_carpeta, NombreArchivoActividad.Para("Carla", procesos[2].Pid))));
     }
 }
