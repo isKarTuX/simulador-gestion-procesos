@@ -1,0 +1,150 @@
+@page "/reportes"
+@using System.Text
+@using SimuladorProcesos.Core.Modelos
+@using SimuladorProcesos.Web.Simulacion
+@implements IDisposable
+@inject ISimulador Simulador
+
+@* Página de reportes (M7): lee el mismo ISimulador scoped del circuito que la simulación. *@
+
+<PageTitle>Reportes de la simulación</PageTitle>
+
+<h1 class="titulo-pagina">Reportes</h1>
+
+@if (!_terminada)
+{
+  <p class="aviso" role="status">
+    La simulación aún no termina: los reportes aparecen cuando todos los procesos llegan a Terminado.
+    <a href="/">Volver a la simulación</a>
+  </p>
+}
+else
+{
+  <p class="resumen">
+    @_filas.Count procesos terminados del catálogo «@_catalogo».
+    <a class="boton" href="@_csvUrl" download="reporte.csv">Exportar CSV</a>
+  </p>
+  <TablaReporte Titulo="Listado de ejecución" Filas="_filas" />
+  <TablaReporte
+    Titulo="Listado de procesos no expulsivos"
+    Filas="_noExpulsivos"
+    MensajeVacio="Esta corrida no tiene procesos no expulsivos." />
+  <section class="grafico" aria-labelledby="titulo-grafico">
+    <h2 id="titulo-grafico">Gráfico de comportamiento</h2>
+    <GraficoTurnaround Filas="_filas" />
+  </section>
+  <AnexosObservaciones
+    Filas="_filas"
+    NombreCatalogo="@_catalogo"
+    ThMs="@_thMs"
+    QuantumTexto="@_quantumTexto" />
+}
+
+@code {
+  // La simulación solo ofrece el catálogo de ejemplo hasta que 2.3 conecte la selección por REST.
+  private readonly string _catalogo = CatalogoDeEjemplo.Nombre;
+
+  private InstantaneaSimulacion _foto = new(EstadoSimulacion.Detenida, 0, [], null, []);
+  private IReadOnlyList<FilaReporte> _filas = [];
+  private IReadOnlyList<FilaReporte> _noExpulsivos = [];
+  private bool _terminada;
+  private int? _thMs;
+  private string? _quantumTexto;
+  private string _csvUrl = string.Empty;
+  private bool _desechado;
+
+  protected override void OnInitialized()
+  {
+    Recargar();
+    Simulador.CambioEstado += AlCambiarEstado;
+    Simulador.SimulacionFinalizada += AlFinalizar;
+  }
+
+  // El reporte ya viene en orden de finalización; aquí solo se filtra el de no expulsivos.
+  private void Recargar()
+  {
+    _foto = Simulador.ObtenerInstantanea();
+    _terminada = _foto.Estado == EstadoSimulacion.Finalizada;
+    _filas = _terminada ? Simulador.ObtenerReporte() : [];
+    _noExpulsivos = [.. _filas.Where(f => f.PrioridadAsignada == (int)Prioridad.NoExpulsivo)];
+    InferirParametros();
+    _csvUrl = ConstruirCsvUrl(_filas);
+  }
+
+  // ISimulador no expone la configuración: TH y quantum se infieren de la instantánea (R = TH × caracteres).
+  private void InferirParametros()
+  {
+    var conRafaga = _foto.Terminados.FirstOrDefault(p => p.CaracteresTotales > 0);
+    _thMs = conRafaga is null ? null : (int?)(conRafaga.Rafaga / conRafaga.CaracteresTotales);
+    var quantums = _foto.Terminados.Select(p => p.Quantum).Distinct().Order().ToArray();
+    _quantumTexto = quantums.Length switch
+    {
+      0 => null,
+      1 => $"{quantums[0]} caracteres",
+      _ => $"varios ({string.Join(", ", quantums)})",
+    };
+  }
+
+  // Descarga sin JavaScript: el href lleva los datos y el navegador guarda el archivo por el atributo download.
+  private static string ConstruirCsvUrl(IReadOnlyList<FilaReporte> filas)
+  {
+    var csv = new StringBuilder("P,TL,R,PR,TR,TF\n");
+    foreach (var fila in filas)
+    {
+      csv.Append(Celda(fila.Proceso)).Append(',')
+        .Append(fila.TiempoLlegada).Append(',')
+        .Append(fila.Rafaga).Append(',')
+        .Append(fila.PrioridadAsignada).Append(',')
+        .Append(fila.Turnaround).Append(',')
+        .Append(fila.TiempoFinalizacion).Append('\n');
+    }
+
+    return "data:text/csv;charset=utf-8," + Uri.EscapeDataString(csv.ToString());
+  }
+
+  private static string Celda(string valor) =>
+      valor.Contains(',') || valor.Contains('"') ? $"\"{valor.Replace("\"", "\"\"")}\"" : valor;
+
+  // Los eventos llegan desde hilos del motor: solo piden un render, nunca tocan la UI directamente.
+  private void AlCambiarEstado(object? remitente, CambioEstadoEventArgs e) => SolicitarActualizacion();
+
+  private void AlFinalizar(object? remitente, EventArgs e) => SolicitarActualizacion();
+
+  private void SolicitarActualizacion()
+  {
+    if (_desechado)
+    {
+      return;
+    }
+
+    _ = InvokeAsync(() =>
+    {
+      if (_desechado)
+      {
+        return;
+      }
+
+      Recargar();
+      try
+      {
+        StateHasChanged();
+      }
+      catch (ObjectDisposedException)
+      {
+        // El circuito se cerró con un render en cola.
+      }
+      catch (InvalidOperationException)
+      {
+        // El circuito se desconectó.
+      }
+    });
+  }
+
+  public void Dispose()
+  {
+    _desechado = true;
+    // El ISimulador scoped lo libera el contenedor al cerrar el circuito; aquí solo se retiran los handlers.
+    Simulador.CambioEstado -= AlCambiarEstado;
+    Simulador.SimulacionFinalizada -= AlFinalizar;
+  }
+}

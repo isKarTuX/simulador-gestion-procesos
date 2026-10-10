@@ -1,0 +1,63 @@
+.titulo-pagina {
+  margin: 0 0 1rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.aviso {
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #e3e3e3;
+  border-left: 4px solid var(--listos, #2f5bea);
+  border-radius: 8px;
+  line-height: 1.55;
+}
+
+.aviso a {
+  color: var(--listos, #1a4fd6);
+}
+
+.resumen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  margin: 0 0 1rem;
+  color: var(--texto-tenue, #4a4a4a);
+}
+
+.boton {
+  padding: 0.5rem 1rem;
+  font: inherit;
+  color: #1d1d1f;
+  text-decoration: none;
+  background: #fff;
+  border: 1px solid #8a8a8a;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.boton:hover {
+  filter: brightness(0.95);
+}
+
+.boton:focus-visible {
+  outline: 2px solid var(--foco, #2f5bea);
+  outline-offset: 2px;
+}
+
+.grafico {
+  margin: 0 0 1.5rem;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #e3e3e3;
+  border-radius: 8px;
+}
+
+.grafico h2 {
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-bottom: 1px solid var(--linea, #d0d0d0);
+}
