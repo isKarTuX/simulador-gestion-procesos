@@ -12,9 +12,9 @@ Closes #
 ## Verificación
 
 - [ ] Skill `verificar` en verde (formato, compilación sin advertencias, pruebas)
-- [ ] Solo toqué carpetas de mi módulo (AGENTS.md → mapa de propiedad)
+- [ ] Solo toqué los archivos que mi subtarea declara en `docs/PROMPTS.md`
 - [ ] Si cambié el contrato, usé la skill `contrato-xml` y actualicé CONTEXT §5
-- [ ] Marqué las casillas de CONTEXT §6 que completé
+- [ ] Marqué las casillas del issue (CONTEXT.md lo actualiza el humano al fusionar)
 
 ## Cómo probarlo
 

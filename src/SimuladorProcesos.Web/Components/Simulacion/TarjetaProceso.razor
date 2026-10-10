@@ -1,0 +1,13 @@
+@* Tarjeta verde del enunciado. Parámetros congelados; estilo: subtarea 1.11. *@
+
+<div class="tarjeta-proceso">
+    <strong>Procesos @Proceso.Numero</strong>
+    <span>Pid: @Proceso.Pid</span>
+    <span>Quantum: @Proceso.Quantum</span>
+    <span>Ejecuciones: @Proceso.Ejecuciones</span>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public ProcesoInstantanea Proceso { get; set; } = default!;
+}

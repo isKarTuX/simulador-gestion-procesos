@@ -41,21 +41,21 @@ flowchart LR
 
 ## Olas
 
-Cada ola es un conjunto de issues que pueden trabajarse **a la vez** porque solo dependen de cosas ya fusionadas en `main`. Lánzalas con `/orquestar <ola>` o abriendo una sesión por agente.
+Cada módulo está dividido en **subtareas** que tocan archivos distintos, así varias corren a la vez sin conflictos. Los prompts listos para copiar, los archivos de cada una y su criterio de hecho están en [`PROMPTS.md`](PROMPTS.md).
 
-| Ola | Fechas | Issues (agente → rama) | Integración al cerrar |
+| Ola | Fechas | Subtareas (issue) | Integración al cerrar |
 |---|---|---|---|
-| **0** | Sáb 10 | M0 base, contrato y repo (hecho en esta sesión) · enviar preguntas al profesor (humano) | `main` compila y CI en verde |
-| **1** | Dom 11 – Mié 14 | Data + M4 (`backend` → `feat/m4-api-xml`) · M1 (`desktop` → `feat/m1-recolector`) · M5 estructuras y motor (`motor` → `feat/m5-motor`) · M6 GUI con `SimuladorFalso` (`frontend` → `feat/m6-gui`) | **Mié 14**: la App 1 crea un catálogo real y el `.http` lo devuelve en XML |
-| **2** | Mié 14 – Sáb 17 | M2 + M3 (`desktop` → `feat/m2-m3-catalogos-actividad`) · M6 conectar motor real y cliente REST (`frontend` → `feat/m6-integracion`) · QA del motor (`qa`) | **Sáb 17**: flujo punta a punta App 1 → BD → REST → App 2 en vivo |
-| **3** | Dom 18 | M7 reportes y gráfico (`frontend` → `feat/m7-reportes`) · correcciones de QA · M8 diagramas y README (`docs/m8-...`) | **Dom 18 noche**: congelar funcionalidades, etiqueta `v1.0.0-rc1` |
-| **4** | Lun 19 | QA final punta a punta · ensayo `/sustentacion` x3 · demo grabada de respaldo | Etiqueta `v1.0.0` |
+| **0** | Sáb 10 | Base, contrato, andamiaje de interfaces (hecho) · preguntas al profesor (#1) | `main` compila y CI en verde |
+| **1** | Sáb 10 – Mié 14 | 1.1 Repositorio (#12) · 1.2 Endpoints XML (#13) · 1.3 Selección CPU/memoria (#14) · 1.4 Metadatos (#15) · 1.5 Actividad (#16) · 1.6 Ventana de catálogos (#17) · 1.7 Estructuras (#18) · 1.8 Cálculos (#19) · 1.9 Planificador (#20) · 1.10 Página de simulación (#21) · 1.11 Bandas y tarjetas (#22) · 1.12 Cliente REST (#23) | **Mié 14**: Data + Api dan XML real; motor sin hilos probado; GUI anima con el simulador falso |
+| **2** | Jue 15 – Sáb 17 | 2.1 Hilos y pausa (#24) · 2.2 App 1 con servicios reales (#25) · 2.3 Web con motor real (#7) · 2.4 QA del motor (#8) | **Sáb 17**: flujo punta a punta App 1 → BD → REST → App 2 en vivo |
+| **3** | Dom 18 | 3.1 Tablas (#26) · 3.2 Gráfico (#27) · 3.3–3.5 Notas de sustentación (#28–#30) · 3.6 README y capturas (#31) · 3.7 QA punta a punta (#32) | **Dom 18 noche**: congelar, etiqueta `v1.0.0-rc1` |
+| **4** | Lun 19 | Correcciones de QA · `/sustentacion todo` x3 · demo grabada | Etiqueta `v1.0.0` |
 | — | Mar 20 | Solo correcciones críticas. Entrega 1:30 p.m. | Release en GitHub |
 
 ## Cómo trabajar con varios agentes
 
-1. **Un issue = un agente = una rama = un worktree.** Así dos agentes nunca editan los mismos archivos. El mapa de propiedad está en [`AGENTS.md`](../AGENTS.md).
-2. **Lanzar**: desde la sesión principal, `/orquestar 1` lanza la ola 1 en segundo plano (cada subagente en su propio worktree). Alternativa manual: en la app de Claude, nueva sesión con worktree y el mensaje *"Actúa como el agente `motor` y trabaja el issue #N siguiendo AGENTS.md"*.
+1. **Una subtarea = un agente = una rama = un worktree.** Cada subtarea declara sus archivos en [`PROMPTS.md`](PROMPTS.md), así dos agentes nunca editan el mismo archivo.
+2. **Lanzar**: desde la sesión principal, `/orquestar 1` lanza una tanda en segundo plano (cada subagente en su propio worktree). Alternativa manual: en la app de Claude, una sesión nueva con worktree por subtarea, pegando su prompt de [`PROMPTS.md`](PROMPTS.md).
 3. **Integrar**: tú revisas cada PR (el de M5 línea por línea), esperas el CI y haces *squash merge*. Orden de merge: lo que otros necesitan primero (Data → M4 → M2; M5 → M6).
 4. **Sincronizar**: después de cada merge, los agentes activos hacen `git pull --rebase origin main` en su rama.
 5. **Auditar**: cuando M5 esté en PR, lanza el agente `qa` sobre esa rama antes de fusionar.
@@ -72,6 +72,6 @@ Cada ola es un conjunto de issues que pueden trabajarse **a la vez** porque solo
 
 - **Ramas**: `feat/`, `fix/`, `docs/`, `test/`, `contrato/` + `mN-descripcion`.
 - **Commits**: Conventional Commits con alcance = proyecto (`feat(api): ...`, `test(engine): ...`).
-- **Etiquetas**: `modulo:M0`…`modulo:M8`, `ola:1`…`ola:4`, `contrato`, `bloqueo`, `bug`, `docs`.
+- **Etiquetas**: `modulo:M0`…`modulo:M8`, `ola:0`…`ola:4`, `agente:*`, `epica` (agrupa subtareas), `contrato`, `bloqueo`, `bug`.
 - **Milestone**: "Entrega 20/10" con todos los issues.
 - **Versiones**: `v0.x` durante el desarrollo, `v1.0.0-rc1` al congelar, `v1.0.0` la entrega.

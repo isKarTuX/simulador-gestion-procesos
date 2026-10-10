@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SimuladorProcesos.Web\SimuladorProcesos.Web.csproj" />
+  </ItemGroup>
+
+  <!-- Los ejemplos del contrato sirven de respuestas falsas de la Api. -->
+  <ItemGroup>
+    <None Include="..\..\docs\contrato\*.xml" Link="contrato\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

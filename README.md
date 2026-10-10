@@ -85,7 +85,7 @@ dotnet test SimuladorProcesos.slnx
 ## Documentación
 
 - [Requisitos, contrato y decisiones](CONTEXT.md)
-- [Plan de trabajo](docs/PLAN.md)
+- [Plan de trabajo](docs/PLAN.md) · [Prompts por subtarea para agentes](docs/PROMPTS.md)
 - [Diagramas](docs/diagramas.md)
 - Decisiones: [arquitectura y stack](docs/adr/0001-arquitectura-y-stack.md) · [concurrencia](docs/adr/0002-modelo-de-concurrencia.md) · [estructuras dinámicas](docs/adr/0003-estructuras-dinamicas.md)
 
