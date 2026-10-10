@@ -366,13 +366,13 @@ repetir limite veces:
 
 ### M8. Pruebas y documentación
 **Casos de prueba**
-- [ ] Todos expulsivos.
-- [ ] Todos no expulsivos.
-- [ ] Mezcla de ambos.
-- [ ] Un solo proceso.
-- [ ] Descripción vacía.
-- [ ] Pausar y reiniciar a mitad de la simulación.
-- [ ] Catálogo con 1 y con muchos procesos.
+- [x] Todos expulsivos. (#44 sin hilos, #46 con hilos)
+- [x] Todos no expulsivos. (#44, #46)
+- [x] Mezcla de ambos. (#44, #46)
+- [x] Un solo proceso. (#44, #46)
+- [x] Descripción vacía. (#44, #46)
+- [x] Pausar y reiniciar a mitad de la simulación. (#46)
+- [x] Catálogo con 1 y con muchos procesos. (#46)
 
 **Documentación**
 - [x] Diagrama de estados (`docs/diagramas.md`).
