@@ -1,18 +1,40 @@
 # Peticiones de prueba del servicio REST XML (VS Code REST Client / Visual Studio / Rider).
+# Requisito: la Api corriendo (dotnet run --project src/SimuladorProcesos.Api) sobre la BD que creó la App 1.
+# Todas responden application/xml aunque no se envíe Accept.
 @api = http://localhost:5080
 
-### Listar catálogos
+### Listar catálogos (200 <Catalogos>)
 GET {{api}}/api/catalogos
 Accept: application/xml
 
-### Procesos de un catálogo
+### Procesos de un catálogo (200 <Catalogo> con sus <Proceso>)
 GET {{api}}/api/catalogos/1/procesos
 Accept: application/xml
 
-### Planificación con TH y quantum
+### Catálogo inexistente (404 <Error>)
+GET {{api}}/api/catalogos/99999/procesos
+Accept: application/xml
+
+### Planificación con TH y quantum explícitos (200 <Planificacion>, rafagaMs = TH x caracteres)
 GET {{api}}/api/planificacion/1?th=100&quantum=5
 Accept: application/xml
 
-### Catálogo inexistente → 404 <Error>
-GET {{api}}/api/catalogos/99999/procesos
+### Planificación con los valores por defecto (TH = 100, quantum = 5)
+GET {{api}}/api/planificacion/1
+Accept: application/xml
+
+### Planificación de un catálogo inexistente (404 <Error>)
+GET {{api}}/api/planificacion/99999
+Accept: application/xml
+
+### TH no positivo (400 <Error>)
+GET {{api}}/api/planificacion/1?th=0&quantum=5
+Accept: application/xml
+
+### Quantum no positivo (400 <Error>)
+GET {{api}}/api/planificacion/1?th=100&quantum=-1
+Accept: application/xml
+
+### TH que no es un entero (400 <Error>)
+GET {{api}}/api/planificacion/1?th=abc
 Accept: application/xml

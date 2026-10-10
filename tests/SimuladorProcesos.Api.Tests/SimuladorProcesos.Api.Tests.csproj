@@ -8,4 +8,9 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Los ejemplos del contrato viajan junto a las pruebas para comparar la estructura de las respuestas. -->
+    <None Include="..\..\docs\contrato\*.xml" Link="contrato\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
