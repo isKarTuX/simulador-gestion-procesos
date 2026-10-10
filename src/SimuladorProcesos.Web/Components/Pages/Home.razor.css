@@ -1,0 +1,116 @@
+.titulo-pagina {
+  margin: 0 0 1rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.controles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #e3e3e3;
+  border-radius: 8px;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+  min-width: 10rem;
+}
+
+.campo label {
+  font-size: .85rem;
+  color: #4a4a4a;
+}
+
+.campo input,
+.campo select {
+  padding: .45rem .6rem;
+  font: inherit;
+  border: 1px solid #b8b8b8;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.campo input[aria-invalid="true"] {
+  border-color: #b3261e;
+}
+
+.error {
+  color: #b3261e;
+  font-size: .85rem;
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-left: auto;
+}
+
+.boton {
+  padding: .5rem 1rem;
+  font: inherit;
+  color: #1d1d1f;
+  background: #fff;
+  border: 1px solid #8a8a8a;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.boton.primario {
+  color: #fff;
+  background: #1f6f33;
+  border-color: #1f6f33;
+}
+
+.boton:hover:not(:disabled) {
+  filter: brightness(.95);
+}
+
+.boton:focus-visible,
+.campo input:focus-visible,
+.campo select:focus-visible,
+.enlace-reportes:focus-visible {
+  outline: 2px solid #2f5bea;
+  outline-offset: 2px;
+}
+
+.boton:disabled {
+  color: #767676;
+  background: #f0f0f0;
+  border-color: #cfcfcf;
+  cursor: not-allowed;
+}
+
+.estado-simulacion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: baseline;
+  margin: 1rem 0;
+  color: #4a4a4a;
+}
+
+.enlace-reportes {
+  margin-left: auto;
+  color: #1a4fd6;
+}
+
+.bandas {
+  margin-top: .5rem;
+}
+
+@media (max-width: 600px) {
+  .acciones {
+    margin-left: 0;
+  }
+
+  .campo {
+    flex: 1 1 100%;
+  }
+}

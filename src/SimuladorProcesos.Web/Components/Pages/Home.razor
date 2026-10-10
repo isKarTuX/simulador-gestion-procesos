@@ -1,13 +1,213 @@
 @page "/"
+@using SimuladorProcesos.Web.Simulacion
+@implements IDisposable
+@inject ISimulador Simulador
 
 <PageTitle>Simulador de Procesos</PageTitle>
 
-<h1>App 2 · Simulador</h1>
-<p class="pendiente">Pendiente: M6 panel en vivo y M7 reportes (agente frontend).</p>
+<h1 class="titulo-pagina">Simulación Round Robin</h1>
 
-<section class="bandas">
-    <div class="banda listos"><h2>Listos</h2></div>
-    <div class="banda ejecucion"><h2>Ejecución</h2></div>
-    <div class="banda espera"><h2>Espera</h2></div>
-    <div class="banda terminado"><h2>Terminado</h2></div>
+<section class="controles" aria-label="Parámetros y controles de la simulación">
+    <div class="campo">
+        <label for="catalogo">Catálogo</label>
+        <select id="catalogo" @bind="_catalogo" disabled="@EnMarcha">
+            <option value="@CatalogoDeEjemplo.Nombre">@CatalogoDeEjemplo.Nombre</option>
+        </select>
+    </div>
+
+    <div class="campo">
+        <label for="th">TH (ms por carácter)</label>
+        <input id="th" type="number" min="1" step="1" inputmode="numeric"
+               @bind="_thMs" @bind:event="oninput"
+               disabled="@EnMarcha" aria-invalid="@(!ThValido)" aria-describedby="error-th" />
+        @if (!ThValido)
+        {
+            <span id="error-th" class="error" role="alert">TH debe ser un entero mayor que 0.</span>
+        }
+    </div>
+
+    <div class="campo">
+        <label for="quantum">Quantum (caracteres)</label>
+        <input id="quantum" type="number" min="1" step="1" inputmode="numeric"
+               @bind="_quantum" @bind:event="oninput"
+               disabled="@EnMarcha" aria-invalid="@(!QuantumValido)" aria-describedby="error-quantum" />
+        @if (!QuantumValido)
+        {
+            <span id="error-quantum" class="error" role="alert">El quantum debe ser un entero mayor que 0.</span>
+        }
+    </div>
+
+    <div class="acciones">
+        <button type="button" class="boton primario" @onclick="Iniciar" disabled="@(!PuedeIniciar)">Iniciar</button>
+        <button type="button" class="boton" @onclick="Pausar" disabled="@(_foto.Estado != EstadoSimulacion.EnCurso)">Pausar</button>
+        <button type="button" class="boton" @onclick="Reanudar" disabled="@(_foto.Estado != EstadoSimulacion.Pausada)">Reanudar</button>
+        <button type="button" class="boton" @onclick="Reiniciar" disabled="@(_foto.Estado == EstadoSimulacion.Detenida)">Reiniciar</button>
+    </div>
 </section>
+
+<section class="estado-simulacion" aria-label="Estado de la simulación">
+    <span>Estado: <strong id="estado-simulacion">@TextoEstado</strong></span>
+    <span>Reloj simulado: <strong id="reloj-simulado">@_foto.RelojMs ms</strong></span>
+    <a class="enlace-reportes" href="reportes">Ver reportes</a>
+</section>
+
+@if (_mensajeError is not null)
+{
+    <p class="error" role="alert">@_mensajeError</p>
+}
+
+<section class="bandas" aria-label="Estados de los procesos">
+    <BandaEstado Titulo="Listos" Clase="listos" Procesos="_listos" />
+    <BandaEstado Titulo="Ejecución" Clase="ejecucion" Procesos="_ejecucion" />
+    <BandaEstado Titulo="Espera" Clase="espera" Procesos="_espera" />
+    <BandaEstado Titulo="Terminado" Clase="terminado" Procesos="_terminados" />
+</section>
+
+@code {
+    // Tope de ~20 renders por segundo: el motor puede emitir eventos mucho más rápido que lo que la UI necesita pintar.
+    private const int MsEntreRenders = 50;
+
+    // Refresco periódico solo para que el reloj simulado avance entre transiciones.
+    private const int MsRefrescoReloj = 100;
+
+    private readonly System.Diagnostics.Stopwatch _cronometro = System.Diagnostics.Stopwatch.StartNew();
+    private Timer? _refrescoReloj;
+    private InstantaneaSimulacion _foto = new(EstadoSimulacion.Detenida, 0, [], null, []);
+    private IReadOnlyList<ProcesoInstantanea> _listos = [];
+    private IReadOnlyList<ProcesoInstantanea> _ejecucion = [];
+    private IReadOnlyList<ProcesoInstantanea> _espera = [];
+    private IReadOnlyList<ProcesoInstantanea> _terminados = [];
+    private string _catalogo = CatalogoDeEjemplo.Nombre;
+    private int? _thMs = 100;
+    private int? _quantum = 5;
+    private string? _mensajeError;
+    private long _ultimoRenderMs = -MsEntreRenders;
+    private int _renderProgramado;
+    private volatile bool _desechado;
+
+    private bool ThValido => _thMs is > 0;
+
+    private bool QuantumValido => _quantum is > 0;
+
+    private bool EnMarcha => _foto.Estado is EstadoSimulacion.EnCurso or EstadoSimulacion.Pausada;
+
+    private bool PuedeIniciar => ThValido && QuantumValido
+        && _foto.Estado is EstadoSimulacion.Detenida or EstadoSimulacion.Finalizada;
+
+    private string TextoEstado => _foto.Estado switch
+    {
+        EstadoSimulacion.Detenida => "Detenida",
+        EstadoSimulacion.EnCurso => "En curso",
+        EstadoSimulacion.Pausada => "Pausada",
+        EstadoSimulacion.Finalizada => "Finalizada",
+        _ => string.Empty,
+    };
+
+    protected override void OnInitialized()
+    {
+        Actualizar();
+        Simulador.CambioEstado += AlCambiarEstado;
+        Simulador.SimulacionFinalizada += AlFinalizar;
+        _refrescoReloj = new Timer(_ => RefrescarReloj(), null, MsRefrescoReloj, MsRefrescoReloj);
+    }
+
+    private void Iniciar() => Ejecutar(() =>
+    {
+        // Cargar cada vez para tomar el TH y quantum actuales; tras Reiniciar o Finalizada también es válido.
+        Simulador.Cargar(CatalogoDeEjemplo.Procesos, new ConfiguracionSimulacion(_thMs!.Value, _quantum!.Value));
+        Simulador.Iniciar();
+    });
+
+    private void Pausar() => Ejecutar(Simulador.Pausar);
+
+    private void Reanudar() => Ejecutar(Simulador.Reanudar);
+
+    private void Reiniciar() => Ejecutar(Simulador.Reiniciar);
+
+    private void Ejecutar(Action accion)
+    {
+        _mensajeError = null;
+        try
+        {
+            accion();
+        }
+        catch (InvalidOperationException ex)
+        {
+            // El motor pudo cambiar de estado entre el clic y la llamada (p. ej. al finalizar).
+            _mensajeError = ex.Message;
+        }
+
+        Actualizar();
+    }
+
+    // Toma una foto coherente del simulador; solo se llama desde el contexto de sincronización del componente.
+    private void Actualizar()
+    {
+        _foto = Simulador.ObtenerInstantanea();
+        _listos = [.. _foto.Listos.Where(p => !p.EnEspera)];
+        _ejecucion = _foto.Ejecucion is null ? [] : [_foto.Ejecucion];
+        _espera = [.. _foto.Espera];
+        _terminados = _foto.Terminados;
+    }
+
+    // Los eventos llegan desde hilos del motor: solo piden un render, nunca tocan el estado del componente.
+    private void AlCambiarEstado(object? remitente, CambioEstadoEventArgs e) => SolicitarRender();
+
+    private void AlFinalizar(object? remitente, EventArgs e) => SolicitarRender();
+
+    private void RefrescarReloj()
+    {
+        if (!_desechado && Simulador.Estado == EstadoSimulacion.EnCurso)
+        {
+            SolicitarRender();
+        }
+    }
+
+    private void SolicitarRender()
+    {
+        if (_desechado || Interlocked.Exchange(ref _renderProgramado, 1) == 1)
+        {
+            return;
+        }
+
+        var transcurrido = _cronometro.ElapsedMilliseconds - Interlocked.Read(ref _ultimoRenderMs);
+        _ = RenderizarTrasAsync((int)Math.Max(0, MsEntreRenders - transcurrido));
+    }
+
+    private async Task RenderizarTrasAsync(int esperaMs)
+    {
+        try
+        {
+            if (esperaMs > 0)
+            {
+                await Task.Delay(esperaMs);
+            }
+
+            if (_desechado)
+            {
+                return;
+            }
+
+            await InvokeAsync(() =>
+            {
+                // Se libera el cupo antes de leer la foto para que un evento posterior programe otro render.
+                Interlocked.Exchange(ref _renderProgramado, 0);
+                Interlocked.Exchange(ref _ultimoRenderMs, _cronometro.ElapsedMilliseconds);
+                Actualizar();
+                StateHasChanged();
+            });
+        }
+        catch (ObjectDisposedException)
+        {
+            // El circuito se cerró mientras había un render pendiente.
+        }
+    }
+
+    public void Dispose()
+    {
+        _desechado = true;
+        _refrescoReloj?.Dispose();
+        Simulador.CambioEstado -= AlCambiarEstado;
+        Simulador.SimulacionFinalizada -= AlFinalizar;
+    }
+}
