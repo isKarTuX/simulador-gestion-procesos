@@ -1,0 +1,90 @@
+.tarjeta-proceso {
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+    box-sizing: border-box;
+    width: 10.25rem;
+    padding: .65rem .8rem .7rem;
+    font-size: .8rem;
+    line-height: 1.3;
+    color: #fff;
+    background: var(--tarjeta);
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .18);
+    /* Al cambiar de banda la tarjeta se monta de nuevo: entra con un fundido corto. */
+    animation: aparecer .35s ease-out;
+}
+
+/* Quien tiene la CPU se distingue por un anillo, no solo por el color. */
+.tarjeta-proceso.ejecutando {
+    box-shadow: 0 0 0 3px var(--fondo), 0 0 0 5px var(--tarjeta), 0 2px 6px rgba(0, 0, 0, .25);
+}
+
+.tarjeta-titulo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .4rem;
+}
+
+.tarjeta-titulo strong {
+    font-size: 1.05rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.insignia-ne {
+    padding: 0 .35rem;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    line-height: 1.15rem;
+    text-decoration: none;
+    color: var(--tarjeta);
+    background: #fff;
+    border-radius: 4px;
+    cursor: help;
+}
+
+.progreso {
+    height: 4px;
+    margin-top: .4rem;
+    overflow: hidden;
+    background: rgba(255, 255, 255, .3);
+    border-radius: 2px;
+}
+
+.progreso-relleno {
+    height: 100%;
+    background: #fff;
+    transition: width .25s ease-out;
+}
+
+@keyframes aparecer {
+    from {
+        opacity: 0;
+        transform: translateY(-6px) scale(.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tarjeta-proceso {
+        animation: none;
+    }
+
+    .progreso-relleno {
+        transition: none;
+    }
+}
+
+@media (max-width: 420px) {
+    .tarjeta-proceso {
+        width: calc(50% - .375rem);
+        min-width: 8.5rem;
+    }
+}

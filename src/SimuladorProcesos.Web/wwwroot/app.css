@@ -1,35 +1,105 @@
+/* Los colores de texto cumplen contraste AA (>= 4.5:1) sobre --fondo y sobre blanco. */
 :root {
     --listos: #2f5bea;
-    --ejecucion: #1f8f3a;
-    --espera: #8a8a8a;
-    --terminado: #d93636;
-    --tarjeta: #138a13;
+    --ejecucion: #1a7a32;
+    --espera: #666666;
+    --terminado: #cc3030;
+    /* Verde de las tarjetas (~#138a13 del esquema) oscurecido lo justo para 4.5:1 con texto blanco. */
+    --tarjeta: #138513;
+
+    --fondo: #fafafa;
+    --superficie: #ffffff;
+    --texto: #1d1d1f;
+    --texto-tenue: #6b6b6b;
+    --linea: #d0d0d0;
+    --foco: #2f5bea;
+    --ancho-maximo: 72rem;
 }
+
+*, *::before, *::after { box-sizing: border-box; }
 
 body {
     margin: 0;
     font-family: "Segoe UI", system-ui, sans-serif;
-    color: #1d1d1f;
-    background: #fafafa;
+    color: var(--texto);
+    background: var(--fondo);
 }
+
+a:focus-visible,
+button:focus-visible {
+    outline: 2px solid var(--foco);
+    outline-offset: 2px;
+}
+
+/* El foco programático de Blazor al navegar no debe dibujar un recuadro sobre el título. */
+h1:focus, main:focus { outline: none; }
+
+.saltar {
+    position: absolute;
+    left: .5rem;
+    top: -4rem;
+    padding: .5rem .9rem;
+    color: #fff;
+    background: var(--texto);
+    border-radius: 6px;
+    z-index: 10;
+}
+
+.saltar:focus { top: .5rem; }
 
 .encabezado {
-    display: flex;
-    gap: 1rem;
-    align-items: baseline;
-    padding: 1rem 2rem;
     border-bottom: 1px solid #e3e3e3;
-    background: #fff;
+    background: var(--superficie);
 }
 
-.marca { font-weight: 600; font-size: 1.1rem; }
-.subtitulo { color: #6b6b6b; }
-.contenido { padding: 1.5rem 2rem; }
-.pendiente { color: #6b6b6b; }
+.encabezado-interior {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem 1.5rem;
+    max-width: var(--ancho-maximo);
+    margin: 0 auto;
+    padding: .75rem 1.5rem;
+}
 
-.banda h2 { margin: 1rem 0 .25rem; font-weight: 400; }
-.banda { border-bottom: 1px solid #d0d0d0; min-height: 4rem; }
-.listos h2 { color: var(--listos); }
-.ejecucion h2 { color: var(--ejecucion); }
-.espera h2 { color: var(--espera); }
-.terminado h2 { color: var(--terminado); }
+.identidad {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .1rem .9rem;
+}
+
+.marca { font-weight: 700; font-size: 1.15rem; }
+.subtitulo { color: var(--texto-tenue); font-size: .9rem; }
+
+.navegacion { display: flex; gap: .25rem; }
+
+.enlace-nav {
+    padding: .4rem .8rem;
+    color: var(--texto);
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+}
+
+.enlace-nav:hover { background: #f0f0f0; }
+
+/* El activo se marca con subrayado y peso, no solo con color. */
+.enlace-nav.activo {
+    font-weight: 700;
+    color: var(--listos);
+    border-bottom-color: var(--listos);
+}
+
+.contenido {
+    max-width: var(--ancho-maximo);
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+@media (max-width: 480px) {
+    .encabezado-interior { padding: .6rem 1rem; }
+    .contenido { padding: 1rem; }
+    .navegacion { width: 100%; }
+    .enlace-nav { flex: 1; text-align: center; }
+}
