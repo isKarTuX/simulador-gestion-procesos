@@ -1,0 +1,65 @@
+.tabla-reporte {
+  margin: 0 0 1.5rem;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #e3e3e3;
+  border-radius: 8px;
+}
+
+.tabla-reporte h2 {
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-bottom: 1px solid var(--linea, #d0d0d0);
+}
+
+.vacia {
+  margin: 0.5rem 0;
+  color: var(--texto-tenue, #6b6b6b);
+}
+
+.desplaza {
+  overflow-x: auto;
+}
+
+.desplaza:focus-visible {
+  outline: 2px solid var(--foco, #2f5bea);
+  outline-offset: 2px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+th,
+td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e9e9e9;
+}
+
+thead th {
+  white-space: nowrap;
+}
+
+tbody tr:last-child > * {
+  border-bottom: none;
+}
+
+.num {
+  text-align: right;
+}
+
+abbr {
+  text-decoration: underline dotted;
+  cursor: help;
+}
+
+.unidades {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  color: var(--texto-tenue, #6b6b6b);
+}

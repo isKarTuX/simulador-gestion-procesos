@@ -1,0 +1,61 @@
+@using SimuladorProcesos.Core.Modelos
+
+@* Listado del reporte con las columnas del enunciado (CONTEXT §2.2): P, T.L, R, P.R, T.R, T.F. *@
+
+<section class="tabla-reporte" aria-labelledby="@_idTitulo">
+  <h2 id="@_idTitulo">@Titulo</h2>
+  @if (Filas.Count == 0)
+  {
+    <p class="vacia">@MensajeVacio</p>
+  }
+  else
+  {
+    <div class="desplaza" role="region" aria-labelledby="@_idTitulo" tabindex="0">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col"><abbr title="Nombre del proceso">P</abbr></th>
+            <th scope="col" class="num"><abbr title="Tiempo de llegada">T.L</abbr></th>
+            <th scope="col" class="num"><abbr title="Ráfaga: TH por caracteres de la descripción, en ms">R</abbr></th>
+            <th scope="col"><abbr title="Prioridad asignada: 0 expulsivo, 1 no expulsivo">P.R</abbr></th>
+            <th scope="col" class="num"><abbr title="Turnaround: TF real menos TL, en ms">T.R</abbr></th>
+            <th scope="col" class="num"><abbr title="Tiempo de finalización del enunciado: Quantum por ejecuciones">T.F</abbr></th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach (var fila in Filas)
+          {
+            <tr>
+              <th scope="row">@fila.Proceso</th>
+              <td class="num">@fila.TiempoLlegada</td>
+              <td class="num">@fila.Rafaga</td>
+              <td>@TextoPrioridad(fila.PrioridadAsignada)</td>
+              <td class="num">@fila.Turnaround</td>
+              <td class="num">@fila.TiempoFinalizacion</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="unidades">Tiempos en milisegundos. Pase el cursor sobre cada columna para ver su significado.</p>
+  }
+</section>
+
+@code {
+  // Id único por instancia: la página muestra este componente dos veces.
+  private readonly string _idTitulo = $"tabla-{Guid.NewGuid():N}";
+
+  [Parameter, EditorRequired]
+  public string Titulo { get; set; } = string.Empty;
+
+  /// <summary>Filas en orden de finalización, tal como las entrega ISimulador.ObtenerReporte.</summary>
+  [Parameter, EditorRequired]
+  public IReadOnlyList<FilaReporte> Filas { get; set; } = [];
+
+  [Parameter]
+  public string MensajeVacio { get; set; } = "Sin filas en este listado.";
+
+  // Mismo formato que la App 1 para que ambas aplicaciones hablen igual de la prioridad.
+  private static string TextoPrioridad(int asignada) =>
+      asignada == (int)Prioridad.NoExpulsivo ? "1 · No expulsivo" : "0 · Expulsivo";
+}

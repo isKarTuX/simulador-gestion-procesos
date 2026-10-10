@@ -1,0 +1,86 @@
+@* Anexos del reporte: TF del enunciado frente al TF real, promedios y observaciones (CONTEXT §3, duda 4). *@
+
+<section class="anexos" aria-labelledby="@_idTitulo">
+  <h2 id="@_idTitulo">Anexos y observaciones</h2>
+  @if (Filas.Count == 0)
+  {
+    <p class="vacia">Sin procesos terminados para anexar.</p>
+  }
+  else
+  {
+    <h3 id="@_idTabla">TF del enunciado frente al TF real</h3>
+    <div class="desplaza" role="region" aria-labelledby="@_idTabla" tabindex="0">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col"><abbr title="Nombre del proceso">P</abbr></th>
+            <th scope="col" class="num"><abbr title="TF del enunciado: Quantum por ejecuciones (solo cuenta turnos de CPU)">TF enunciado</abbr></th>
+            <th scope="col" class="num"><abbr title="TF real: valor del reloj simulado cuando el proceso terminó">TF real</abbr></th>
+            <th scope="col" class="num"><abbr title="Espera: TAT menos ráfaga, en ms">Espera</abbr></th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach (var fila in Filas)
+          {
+            <tr>
+              <th scope="row">@fila.Proceso</th>
+              <td class="num">@fila.TiempoFinalizacion</td>
+              <td class="num">@fila.TiempoFinalizacionReal</td>
+              <td class="num">@fila.Espera</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <dl class="promedios">
+      <div>
+        <dt>Turnaround promedio</dt>
+        <dd>@PromedioTurnaround ms</dd>
+      </div>
+      <div>
+        <dt>Espera promedio</dt>
+        <dd>@PromedioEspera ms</dd>
+      </div>
+    </dl>
+    <p>
+      El TF del enunciado (<code>TF = Quantum × #Ejecuciones</code>) solo cuenta los turnos que el proceso
+      usó la CPU e ignora el tiempo que pasó esperando en Listo; el TF real es el valor del reloj simulado
+      cuando el proceso terminó, así que incluye esas esperas. Por eso la columna T.R se calcula con el TF
+      real (<code>TAT = TF real − TL</code>): es la única forma de que refleje la espera
+      (<code>Espera = TAT − R</code>).
+    </p>
+    <p>
+      Parámetros de esta corrida: catálogo «@NombreCatalogo», TH de @(TextoTh) ms por carácter
+      y quantum de @(QuantumTexto ?? "no disponible").
+    </p>
+  }
+</section>
+
+@code {
+  private readonly string _idTitulo = $"anexos-{Guid.NewGuid():N}";
+  private readonly string _idTabla = $"anexos-tabla-{Guid.NewGuid():N}";
+
+  /// <summary>Filas en orden de finalización, tal como las entrega ISimulador.ObtenerReporte.</summary>
+  [Parameter, EditorRequired]
+  public IReadOnlyList<FilaReporte> Filas { get; set; } = [];
+
+  [Parameter, EditorRequired]
+  public string NombreCatalogo { get; set; } = string.Empty;
+
+  /// <summary>Milisegundos por carácter; null si no se pudo inferir de la instantánea.</summary>
+  [Parameter]
+  public int? ThMs { get; set; }
+
+  /// <summary>Quantum ya redactado ("5 caracteres" o "varios (2, 5)"); null si no se conoce.</summary>
+  [Parameter]
+  public string? QuantumTexto { get; set; }
+
+  private string PromedioTurnaround => Promedio(Filas.Select(f => (double)f.Turnaround));
+
+  private string PromedioEspera => Promedio(Filas.Select(f => (double)f.Espera));
+
+  private string TextoTh => ThMs?.ToString() ?? "no disponible";
+
+  // Un decimal basta: los promedios solo resumen la corrida, no alimentan otras fórmulas.
+  private static string Promedio(IEnumerable<double> valores) => valores.Average().ToString("F1");
+}
