@@ -353,8 +353,8 @@ repetir limite veces:
 - **Reinicio:** cancelar hilos, vaciar colas, recargar el catálogo desde el servicio.
 
 ### M6. GUI web
-- [ ] Cuatro paneles: Listos (azul), Ejecución (verde), Espera (gris), Terminado (rojo).
-- [ ] Tarjeta por proceso: `Procesos N · Pid · Quantum · Ejecuciones`.
+- [x] Cuatro paneles: Listos (azul), Ejecución (verde), Espera (gris), Terminado (rojo). (#42)
+- [x] Tarjeta por proceso: `Procesos N · Pid · Quantum · Ejecuciones`. (#42)
 - [ ] Controles: seleccionar catálogo, TH, quantum, **Iniciar / Pausar / Reanudar / Reiniciar**.
 - [ ] Actualización en vivo con SignalR (el motor emite eventos de cambio de estado).
 
