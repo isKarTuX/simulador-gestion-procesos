@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SimuladorProcesos.Data\SimuladorProcesos.Data.csproj" />
+  </ItemGroup>
+
+</Project>

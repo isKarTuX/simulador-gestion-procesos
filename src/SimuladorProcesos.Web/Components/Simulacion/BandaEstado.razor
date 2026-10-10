@@ -1,0 +1,23 @@
+@* Banda horizontal de un estado. Parámetros congelados; estilo: subtarea 1.11. *@
+
+<section class="banda @Clase">
+    <h2>@Titulo</h2>
+    <div class="banda-procesos">
+        @foreach (var proceso in Procesos)
+        {
+            <TarjetaProceso @key="proceso.Pid" Proceso="proceso" />
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Titulo { get; set; } = string.Empty;
+
+    /// <summary>listos | ejecucion | espera | terminado</summary>
+    [Parameter, EditorRequired]
+    public string Clase { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public IEnumerable<ProcesoInstantanea> Procesos { get; set; } = [];
+}

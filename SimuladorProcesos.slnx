@@ -10,6 +10,9 @@
   <Folder Name="/tests/">
     <Project Path="tests/SimuladorProcesos.Api.Tests/SimuladorProcesos.Api.Tests.csproj" />
     <Project Path="tests/SimuladorProcesos.Core.Tests/SimuladorProcesos.Core.Tests.csproj" />
+    <Project Path="tests/SimuladorProcesos.Data.Tests/SimuladorProcesos.Data.Tests.csproj" />
+    <Project Path="tests/SimuladorProcesos.Desktop.Tests/SimuladorProcesos.Desktop.Tests.csproj" />
     <Project Path="tests/SimuladorProcesos.Engine.Tests/SimuladorProcesos.Engine.Tests.csproj" />
+    <Project Path="tests/SimuladorProcesos.Web.Tests/SimuladorProcesos.Web.Tests.csproj" />
   </Folder>
 </Solution>

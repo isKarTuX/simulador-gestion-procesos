@@ -1,0 +1,10 @@
+@* Gráfico de línea Proceso vs TurnaRound. Parámetros congelados; implementación con Chart.js: subtarea 3.2. *@
+
+<div class="grafico-turnaround">
+    <p class="pendiente">Gráfico pendiente (subtarea 3.2): @Filas.Count procesos.</p>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<FilaReporte> Filas { get; set; } = [];
+}
