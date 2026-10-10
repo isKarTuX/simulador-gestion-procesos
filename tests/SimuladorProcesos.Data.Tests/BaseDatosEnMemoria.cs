@@ -1,5 +1,6 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace SimuladorProcesos.Data.Tests;
 
@@ -15,8 +16,8 @@ public sealed class BaseDatosEnMemoria : IDisposable
         contexto.Database.EnsureCreated();
     }
 
-    public SimuladorDbContext CrearContexto() =>
-        new(new DbContextOptionsBuilder<SimuladorDbContext>().UseSqlite(_conexion).Options);
+    public SimuladorDbContext CrearContexto(params IInterceptor[] interceptores) =>
+        new(new DbContextOptionsBuilder<SimuladorDbContext>().UseSqlite(_conexion).AddInterceptors(interceptores).Options);
 
     public void Dispose() => _conexion.Dispose();
 }
