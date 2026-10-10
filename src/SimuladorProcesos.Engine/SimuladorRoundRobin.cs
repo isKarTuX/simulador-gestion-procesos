@@ -25,7 +25,7 @@ public sealed class SimuladorRoundRobin : ISimulador
     private readonly List<CambioEstadoEventArgs> _pendientes = [];
 
     private IReadOnlyList<ProcesoEntrada> _procesos = [];
-    private ConfiguracionSimulacion? _configuracion;
+    private ConfiguracionSimulacion _configuracion = new(thMs: 1, quantum: 1);
     private PlanificadorRoundRobin? _planificador;
     private Corrida? _corrida;
     private EstadoSimulacion _estadoSimulacion = EstadoSimulacion.Detenida;
@@ -89,6 +89,7 @@ public sealed class SimuladorRoundRobin : ISimulador
             _estadoSimulacion = EstadoSimulacion.Detenida;
             anterior = _corrida;
             _corrida = null;
+            anterior?.Cancelacion.Cancel();
         }
 
         // Una corrida Finalizada ya no tiene hilos útiles; se cierran fuera del lock para que puedan terminar.
@@ -101,7 +102,7 @@ public sealed class SimuladorRoundRobin : ISimulador
         lock (_estado)
         {
             ComprobarNoLiberado();
-            if (_planificador is null || _configuracion is null)
+            if (_planificador is null)
             {
                 throw new InvalidOperationException("No hay procesos cargados: llama a Cargar antes de Iniciar.");
             }
@@ -111,7 +112,7 @@ public sealed class SimuladorRoundRobin : ISimulador
                 throw new InvalidOperationException($"No se puede iniciar con la simulación {_estadoSimulacion}.");
             }
 
-            _destino.NuevaCorrida();
+            CerrarDestino();
 
             // Antes de despachar, todos los procesos están en Listos: de ahí salen las referencias para sus hilos.
             var procesos = _planificador.Listos.ToArray();
@@ -143,7 +144,7 @@ public sealed class SimuladorRoundRobin : ISimulador
             {
                 case EstadoSimulacion.EnCurso:
                     // Reset bajo el lock: ningún hilo puede copiar un carácter después de que Pausar retorne.
-                    _corrida!.Pausa.Reset();
+                    CorridaVigente().Pausa.Reset();
                     _estadoSimulacion = EstadoSimulacion.Pausada;
                     break;
                 case EstadoSimulacion.Pausada:
@@ -163,7 +164,7 @@ public sealed class SimuladorRoundRobin : ISimulador
             switch (_estadoSimulacion)
             {
                 case EstadoSimulacion.Pausada:
-                    _corrida!.Pausa.Set();
+                    CorridaVigente().Pausa.Set();
                     _estadoSimulacion = EstadoSimulacion.EnCurso;
                     break;
                 case EstadoSimulacion.EnCurso:
@@ -177,7 +178,7 @@ public sealed class SimuladorRoundRobin : ISimulador
 
     public void Reiniciar()
     {
-        Corrida? corrida;
+        Corrida? descartada;
         lock (_estado)
         {
             ComprobarNoLiberado();
@@ -186,21 +187,12 @@ public sealed class SimuladorRoundRobin : ISimulador
                 throw new InvalidOperationException("No hay procesos cargados: no hay nada que reiniciar.");
             }
 
-            corrida = _corrida;
-            _corrida = null;
+            descartada = DescartarCorrida();
         }
 
-        // Los hilos necesitan el lock para salir, así que se esperan fuera de él; el estado sigue siendo el viejo hasta terminar.
-        Terminar(corrida);
-
-        lock (_estado)
-        {
-            // El planificador de la corrida cancelada se descarta: pudo quedar con un turno a medias.
-            _planificador = CrearPlanificador(_procesos, _configuracion!);
-            _estadoSimulacion = EstadoSimulacion.Detenida;
-        }
-
+        // El motor ya está Detenida y consistente; esperar a los hilos viejos fuera del lock no deja a nadie viendo un estado a medias.
         Notificar();
+        Terminar(descartada);
     }
 
     public InstantaneaSimulacion ObtenerInstantanea()
@@ -235,6 +227,7 @@ public sealed class SimuladorRoundRobin : ISimulador
             _liberado = true;
             corrida = _corrida;
             _corrida = null;
+            corrida?.Cancelacion.Cancel();
         }
 
         Terminar(corrida);
@@ -265,7 +258,7 @@ public sealed class SimuladorRoundRobin : ISimulador
                 for (var copiados = 1; copiados <= limite; copiados++)
                 {
                     var caracter = BajoLockSinPausa(corrida, () => corrida.Planificador.CopiarCaracter());
-                    _destino.Escribir(proceso.Pid, proceso.Nombre, caracter);
+                    EscribirActividad(corrida, proceso, caracter);
 
                     // Esperar TH tras el último carácter solo retrasaría el cierre (igual que la App 1).
                     if (copiados < limite || !EstaCompleto(proceso))
@@ -283,6 +276,11 @@ public sealed class SimuladorRoundRobin : ISimulador
         catch (OperationCanceledException)
         {
             // Reiniciar o Dispose cancelaron la corrida: el hilo termina sin avisar a nadie.
+        }
+        catch (Exception)
+        {
+            // Una excepción sin capturar en un Thread derriba todo el proceso .NET; se contiene cancelando la corrida.
+            AbortarPorFallo(corrida);
         }
     }
 
@@ -316,11 +314,27 @@ public sealed class SimuladorRoundRobin : ISimulador
         {
             return;
         }
+        catch (Exception)
+        {
+            // Igual que en los procesos: sin esto un fallo del dispatcher dejaría a todos esperando su turno para siempre.
+            AbortarPorFallo(corrida);
+            return;
+        }
 
         // Si Reiniciar canceló justo ahora, avisar que terminó sería avisar de una corrida que ya no existe.
         if (!corrida.Token.IsCancellationRequested)
         {
-            SimulacionFinalizada?.Invoke(this, EventArgs.Empty);
+            foreach (EventHandler manejador in SimulacionFinalizada?.GetInvocationList() ?? [])
+            {
+                try
+                {
+                    manejador(this, EventArgs.Empty);
+                }
+                catch (Exception)
+                {
+                    // Un suscriptor que falla (p. ej. una UI ya cerrada) no debe tumbar el hilo ni a los demás suscriptores.
+                }
+            }
         }
     }
 
@@ -402,19 +416,27 @@ public sealed class SimuladorRoundRobin : ISimulador
 
         foreach (var aviso in avisos)
         {
-            CambioEstado?.Invoke(this, aviso);
+            foreach (EventHandler<CambioEstadoEventArgs> manejador in CambioEstado?.GetInvocationList() ?? [])
+            {
+                try
+                {
+                    manejador(this, aviso);
+                }
+                catch (Exception)
+                {
+                    // El Engine es puro y no registra nada: un suscriptor que falla se ignora para no tumbar el hilo ni a los demás.
+                }
+            }
         }
     }
 
-    // Cancela la corrida y espera a sus hilos con un plazo total; devuelve sin lanzar aunque alguno no termine.
+    // Espera a los hilos de una corrida ya cancelada con un plazo total; devuelve sin lanzar aunque alguno no termine.
     private static void Terminar(Corrida? corrida)
     {
         if (corrida is null)
         {
             return;
         }
-
-        corrida.Cancelacion.Cancel();
 
         var cronometro = Stopwatch.StartNew();
         var todosTerminaron = true;
@@ -441,6 +463,70 @@ public sealed class SimuladorRoundRobin : ISimulador
             corrida.Dispose();
         }
     }
+
+    // Debe llamarse con el lock tomado: cancela la corrida y deja el motor Detenida con un planificador nuevo, todo en un solo paso.
+    private Corrida? DescartarCorrida()
+    {
+        var corrida = _corrida;
+        _corrida = null;
+        corrida?.Cancelacion.Cancel();
+
+        // El planificador de la corrida cancelada se descarta: pudo quedar con un turno a medias.
+        _planificador = CrearPlanificador(_procesos, _configuracion);
+        _estadoSimulacion = EstadoSimulacion.Detenida;
+
+        // Con el token ya cancelado el destino ignora las escrituras viejas, así que cerrar aquí no pisa nada de una corrida posterior.
+        CerrarDestino();
+        return corrida;
+    }
+
+    // Un fallo inesperado en un hilo cancela la corrida entera: los demás esperarían para siempre a un hilo que ya murió.
+    private void AbortarPorFallo(Corrida corrida)
+    {
+        lock (_estado)
+        {
+            if (ReferenceEquals(_corrida, corrida))
+            {
+                DescartarCorrida();
+            }
+            else
+            {
+                corrida.Cancelacion.Cancel();
+            }
+        }
+
+        Notificar();
+    }
+
+    // La actividad en archivo es auxiliar: si el destino falla (disco lleno) la simulación continúa.
+    private void EscribirActividad(Corrida corrida, ProcesoSimulado proceso, char caracter)
+    {
+        try
+        {
+            _destino.Escribir(proceso.Pid, proceso.Nombre, caracter, corrida.Token);
+        }
+        catch (Exception)
+        {
+            // Se ignora a propósito: el motor no registra nada y el reporte no depende de lo escrito.
+        }
+    }
+
+    // Cerrar los archivos también es auxiliar y no puede dejar al motor a medias.
+    private void CerrarDestino()
+    {
+        try
+        {
+            _destino.NuevaCorrida();
+        }
+        catch (Exception)
+        {
+            // Se ignora a propósito: ver EscribirActividad.
+        }
+    }
+
+    // Pausar y Reanudar solo llegan aquí en EnCurso/Pausada, donde siempre hay corrida; si no, es un error de uso y no un NullReferenceException.
+    private Corrida CorridaVigente() =>
+        _corrida ?? throw new InvalidOperationException("No hay una corrida activa.");
 
     private void ComprobarNoLiberado() => ObjectDisposedException.ThrowIf(_liberado, this);
 

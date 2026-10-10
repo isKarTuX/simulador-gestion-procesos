@@ -9,7 +9,7 @@ public sealed class DestinoEnMemoria : IDestinoActividad
     private readonly Dictionary<int, StringBuilder> _textos = [];
     private int _corridas;
 
-    /// <summary>Cuántas veces el motor empezó una corrida; las pruebas lo usan para ver que Iniciar limpia.</summary>
+    /// <summary>Veces que el motor pidió empezar de cero (cada Iniciar y cada Reiniciar); las pruebas lo usan para ver que limpia.</summary>
     public int Corridas
     {
         get
@@ -30,11 +30,17 @@ public sealed class DestinoEnMemoria : IDestinoActividad
         }
     }
 
-    public void Escribir(int pid, string nombre, char caracter)
+    public void Escribir(int pid, string nombre, char caracter, CancellationToken cancelacion)
     {
         // El lock es necesario porque la prueba lee el texto desde su hilo mientras el proceso aún escribe.
         lock (_candado)
         {
+            // Se comprueba dentro del lock: así una escritura vieja no puede colarse después de NuevaCorrida.
+            if (cancelacion.IsCancellationRequested)
+            {
+                return;
+            }
+
             if (!_textos.TryGetValue(pid, out var texto))
             {
                 texto = new StringBuilder();

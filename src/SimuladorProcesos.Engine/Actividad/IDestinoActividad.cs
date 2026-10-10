@@ -9,6 +9,9 @@ public interface IDestinoActividad
     /// <summary>El motor la llama en cada Iniciar: una corrida nueva empieza de cero y no se mezcla con el texto de la anterior.</summary>
     void NuevaCorrida();
 
-    /// <summary>Agrega un carácter a la actividad del proceso; pid y nombre identifican su archivo.</summary>
-    void Escribir(int pid, string nombre, char caracter);
+    /// <summary>
+    /// Agrega un carácter a la actividad del proceso; pid y nombre identifican su archivo.
+    /// Si la corrida ya se canceló (Reiniciar o Dispose) el destino debe ignorar el carácter: el hilo pudo quedar bloqueado en una escritura vieja.
+    /// </summary>
+    void Escribir(int pid, string nombre, char caracter, CancellationToken cancelacion);
 }

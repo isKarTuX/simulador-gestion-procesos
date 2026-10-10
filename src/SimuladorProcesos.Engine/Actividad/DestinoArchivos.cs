@@ -27,11 +27,17 @@ public sealed class DestinoArchivos : IDestinoActividad, IDisposable
         }
     }
 
-    public void Escribir(int pid, string nombre, char caracter)
+    public void Escribir(int pid, string nombre, char caracter, CancellationToken cancelacion)
     {
         var archivo = NombreArchivoActividad.Para(nombre, pid);
         lock (_candado)
         {
+            // Se comprueba dentro del lock: así una escritura vieja no puede reabrir el archivo después de NuevaCorrida.
+            if (cancelacion.IsCancellationRequested)
+            {
+                return;
+            }
+
             if (!_escritores.TryGetValue(archivo, out var escritor))
             {
                 Directory.CreateDirectory(_carpeta);
@@ -60,7 +66,14 @@ public sealed class DestinoArchivos : IDestinoActividad, IDisposable
     {
         foreach (var escritor in _escritores.Values)
         {
-            escritor.Dispose();
+            try
+            {
+                escritor.Dispose();
+            }
+            catch (IOException)
+            {
+                // Cerrar es de mejor esfuerzo: un disco que falla al vaciar el búfer no debe impedir cerrar los demás archivos.
+            }
         }
 
         _escritores.Clear();
