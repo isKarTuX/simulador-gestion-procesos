@@ -291,7 +291,7 @@ Los ejemplos completos están en [`docs/contrato/`](docs/contrato/) y se deseria
 - [ ] Formulario: N, criterio (CPU/memoria), número de catálogo (consecutivo o digitado), nombre del catálogo.
 - [ ] Guardar en BD.
 - [ ] Grid con el listado de procesos obtenidos.
-- [ ] Validaciones: N > 0, nombre no vacío, número no repetido.
+- [x] Validaciones: N > 0, nombre no vacío, número no repetido. (#45, probadas en el ViewModel)
 
 ### M3. Actividad del proceso (App 1)
 - [x] Crear en una carpeta de trabajo un archivo `<nombre_saneado>_<pid>.txt` (extensión `.txt` siempre; quitar caracteres inválidos; evitar escribir `chrome.exe`; el `_<pid>` evita que procesos homónimos como varios `svchost` o `chrome` se sobrescriban). (#43)
