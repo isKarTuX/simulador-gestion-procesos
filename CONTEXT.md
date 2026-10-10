@@ -299,11 +299,11 @@ Los ejemplos completos están en [`docs/contrato/`](docs/contrato/) y se deseria
 - [ ] Cada carácter consume un quantum.
 
 ### M4. Servicio REST XML
-- [ ] Web API con formateador XML.
-- [ ] Endpoints de la sección 5.2.
-- [ ] Alojarlo embebido en la App 1 (Kestrel) o como proyecto aparte que lee la misma BD.
+- [x] Web API con formateador XML. (#37)
+- [x] Endpoints de la sección 5.2. (#37)
+- [x] Alojarlo embebido en la App 1 (Kestrel) o como proyecto aparte que lee la misma BD. (#37, proyecto aparte)
 - [ ] Probar con Postman **antes** de tocar la App 2.
-- [ ] Manejo de errores: catálogo inexistente → 404 en XML.
+- [x] Manejo de errores: catálogo inexistente → 404 en XML. (#37)
 
 ### M5. Motor de simulación (App 2, núcleo)
 **Estructuras dinámicas propias (no solo `List<T>`):**
