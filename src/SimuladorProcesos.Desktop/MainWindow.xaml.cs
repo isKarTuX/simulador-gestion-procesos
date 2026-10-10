@@ -1,17 +1,16 @@
 using System.Windows;
-using SimuladorProcesos.Desktop.Falsos;
 using SimuladorProcesos.Desktop.ViewModels;
 
 namespace SimuladorProcesos.Desktop;
 
 public partial class MainWindow : Window
 {
-    public MainWindow()
+    public MainWindow(CatalogoViewModel modelo)
     {
         InitializeComponent();
 
-        // 2.2 reemplaza los falsos por servicios reales
-        var modelo = new CatalogoViewModel(new RecolectorFalso(), new RepositorioEnMemoria(), new ActividadFalsa());
+        // El contenedor de App.xaml.cs entrega el ViewModel ya armado con los servicios reales.
+        ArgumentNullException.ThrowIfNull(modelo);
 
         DataContext = modelo;
         Loaded += async (_, _) => await modelo.InicializarAsync();
