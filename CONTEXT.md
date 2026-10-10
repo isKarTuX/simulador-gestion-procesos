@@ -294,8 +294,8 @@ Los ejemplos completos están en [`docs/contrato/`](docs/contrato/) y se deseria
 - [ ] Validaciones: N > 0, nombre no vacío, número no repetido.
 
 ### M3. Actividad del proceso (App 1)
-- [ ] Crear en una carpeta de trabajo un archivo `<nombre_saneado>.txt` (extensión `.txt` siempre; quitar caracteres inválidos; evitar escribir `chrome.exe`).
-- [ ] Copiar la descripción **carácter por carácter**, esperando TH ms entre caracteres.
+- [x] Crear en una carpeta de trabajo un archivo `<nombre_saneado>_<pid>.txt` (extensión `.txt` siempre; quitar caracteres inválidos; evitar escribir `chrome.exe`; el `_<pid>` evita que procesos homónimos como varios `svchost` o `chrome` se sobrescriban). (#43)
+- [x] Copiar la descripción **carácter por carácter**, esperando TH ms entre caracteres. (#43)
 - [ ] Cada carácter consume un quantum.
 
 ### M4. Servicio REST XML
