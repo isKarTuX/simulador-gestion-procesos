@@ -282,7 +282,7 @@ Los ejemplos completos están en [`docs/contrato/`](docs/contrato/) y se deseria
 
 ### M1. Recolector de procesos (App 1)
 - [x] Listar procesos y ordenar por memoria (`WorkingSet64`) o por CPU (medir dos muestras separadas ~500 ms). (#35)
-- [ ] Obtener **usuario** por WMI; **descripción** por `FileVersionInfo.FileDescription` (respaldo: nombre).
+- [x] Obtener **usuario** por WMI; **descripción** por `FileVersionInfo.FileDescription` (respaldo: nombre). (#41)
 - [x] Manejar `Access Denied` con try/catch y omitir el proceso sin romper. (#35)
 - [x] Regla de prioridad (`Core/Reglas/ReglaPrioridad`): usuario SYSTEM / NT AUTHORITY / LOCAL SERVICE / NETWORK SERVICE → `1` (no expulsivo); el resto → `0` (expulsivo).
 - [x] Devolver exactamente N procesos válidos (si se omiten por permisos, seguir hasta completar N). (#35)
