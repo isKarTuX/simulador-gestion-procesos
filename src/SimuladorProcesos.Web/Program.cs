@@ -11,8 +11,16 @@ builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5080";
 builder.Services.AddHttpClient<IClienteCatalogos, ClienteCatalogos>(cliente => cliente.BaseAddress = new Uri(apiBaseUrl));
 
-// Un simulador por circuito (pestaña). La subtarea 2.3 cambia SimuladorFalso por el motor real.
-builder.Services.AddScoped<ISimulador, SimuladorFalso>();
+// Un simulador por circuito (pestaña): el contenedor lo libera con el circuito.
+// Motor real por defecto; "UsarSimuladorFalso": true solo para demos sin la Api.
+if (builder.Configuration.GetValue<bool>("UsarSimuladorFalso"))
+{
+    builder.Services.AddScoped<ISimulador, SimuladorFalso>();
+}
+else
+{
+    builder.Services.AddScoped<ISimulador, SimuladorRoundRobin>();
+}
 
 var app = builder.Build();
 
