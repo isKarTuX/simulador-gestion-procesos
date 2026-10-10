@@ -1,7 +1,11 @@
 @page "/"
+@using SimuladorProcesos.Core
+@using SimuladorProcesos.Core.Contrato
 @using SimuladorProcesos.Web.Simulacion
 @implements IDisposable
 @inject ISimulador Simulador
+@inject IClienteCatalogos Catalogos
+@inject IConfiguration Configuracion
 
 <PageTitle>Simulador de Procesos</PageTitle>
 
@@ -10,9 +14,35 @@
 <section class="controles" aria-label="Parámetros y controles de la simulación">
     <div class="campo">
         <label for="catalogo">Catálogo</label>
-        <select id="catalogo" @bind="_catalogo" disabled="@EnMarcha">
-            <option value="@CatalogoDeEjemplo.Nombre">@CatalogoDeEjemplo.Nombre</option>
-        </select>
+        @if (_usarFalso)
+        {
+            <select id="catalogo" disabled="@EnMarcha">
+                <option value="@CatalogoDeEjemplo.Nombre">@CatalogoDeEjemplo.Nombre (demo sin Api)</option>
+            </select>
+        }
+        else if (_cargandoCatalogos)
+        {
+            <select id="catalogo" disabled="true">
+                <option>Cargando catálogos…</option>
+            </select>
+        }
+        else if (_catalogos.Count == 0)
+        {
+            <select id="catalogo" disabled="true">
+                <option>Sin catálogos</option>
+            </select>
+        }
+        else
+        {
+            <select id="catalogo" @bind="_catalogoId" @bind:after="AlElegirCatalogoAsync"
+                    disabled="@(EnMarcha || _cargandoSeleccion)">
+                <option value="">— Elige un catálogo —</option>
+                @foreach (var catalogo in _catalogos)
+                {
+                    <option value="@catalogo.Id">@catalogo.Numero · @catalogo.Nombre (@catalogo.Cantidad procesos)</option>
+                }
+            </select>
+        }
     </div>
 
     <div class="campo">
@@ -38,12 +68,26 @@
     </div>
 
     <div class="acciones">
-        <button type="button" class="boton primario" @onclick="Iniciar" disabled="@(!PuedeIniciar)">Iniciar</button>
+        <button type="button" class="boton primario" @onclick="IniciarAsync" disabled="@(!PuedeIniciar)">Iniciar</button>
         <button type="button" class="boton" @onclick="Pausar" disabled="@(_foto.Estado != EstadoSimulacion.EnCurso)">Pausar</button>
         <button type="button" class="boton" @onclick="Reanudar" disabled="@(_foto.Estado != EstadoSimulacion.Pausada)">Reanudar</button>
         <button type="button" class="boton" @onclick="Reiniciar" disabled="@(_foto.Estado == EstadoSimulacion.Detenida)">Reiniciar</button>
     </div>
 </section>
+
+@if (!_usarFalso)
+{
+    <p class="nota">El TH y el quantum se aplican al elegir el catálogo y al pulsar Iniciar.</p>
+}
+
+@if (_errorServicio is not null)
+{
+    <div class="aviso-servicio" role="alert">
+        <p>@_errorServicio</p>
+        <button type="button" class="boton" @onclick="ReintentarAsync"
+                disabled="@(_cargandoCatalogos || _cargandoSeleccion)">Reintentar</button>
+    </div>
+}
 
 <section class="estado-simulacion" aria-label="Estado de la simulación">
     <span>Estado: <strong id="estado-simulacion">@TextoEstado</strong></span>
@@ -63,6 +107,42 @@
     <BandaEstado Titulo="Terminado" Clase="terminado" Procesos="_terminados" />
 </section>
 
+<details class="rafagas">
+    <summary>
+        Ráfagas por proceso (R = TH × caracteres)@(_planificacion is not null ? $" · TH={_planificacion.TH} ms, quantum={_planificacion.Quantum}" : null)
+    </summary>
+    @if (Rafagas.Count == 0)
+    {
+        <p class="vacia">Elige un catálogo para ver su planificación.</p>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th title="Nombre del proceso">P</th>
+                    <th>Pid</th>
+                    <th title="Caracteres de la descripción">Caracteres</th>
+                    <th title="Ráfaga: TH por caracteres, en milisegundos">R (ms)</th>
+                    <th title="Prioridad asignada: 0 expulsivo, 1 no expulsivo">P.R</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var proceso in Rafagas)
+                {
+                    <tr>
+                        <td>@proceso.Nombre</td>
+                        <td>@proceso.Pid</td>
+                        <td>@proceso.Caracteres</td>
+                        <td>@proceso.RafagaMs</td>
+                        <td>@proceso.Prioridad</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</details>
+
 @code {
     // Tope de ~20 renders por segundo: el motor puede emitir eventos mucho más rápido que lo que la UI necesita pintar.
     private const int MsEntreRenders = 50;
@@ -77,10 +157,19 @@
     private IReadOnlyList<ProcesoInstantanea> _ejecucion = [];
     private IReadOnlyList<ProcesoInstantanea> _espera = [];
     private IReadOnlyList<ProcesoInstantanea> _terminados = [];
-    private string _catalogo = CatalogoDeEjemplo.Nombre;
+    private IReadOnlyList<CatalogoResumenXml> _catalogos = [];
+    private PlanificacionXml? _planificacion;
+    private int? _catalogoId;
+    private int? _cargadoCatalogoId;
+    private int? _cargadoTh;
+    private int? _cargadoQuantum;
     private int? _thMs = 100;
     private int? _quantum = 5;
     private string? _mensajeError;
+    private string? _errorServicio;
+    private bool _usarFalso;
+    private bool _cargandoCatalogos;
+    private bool _cargandoSeleccion;
     private long _ultimoRenderMs = -MsEntreRenders;
     private int _renderProgramado;
     private volatile bool _desechado;
@@ -92,7 +181,27 @@
     private bool EnMarcha => _foto.Estado is EstadoSimulacion.EnCurso or EstadoSimulacion.Pausada;
 
     private bool PuedeIniciar => ThValido && QuantumValido
+        && (_usarFalso || _catalogoId is not null)
+        && !_cargandoCatalogos && !_cargandoSeleccion
         && _foto.Estado is EstadoSimulacion.Detenida or EstadoSimulacion.Finalizada;
+
+    // La precarga del selector sigue vigente si nadie cambió catálogo, TH ni quantum desde entonces.
+    private bool CargaVigente => _planificacion is not null
+        && _cargadoCatalogoId == _catalogoId
+        && _cargadoTh == _thMs
+        && _cargadoQuantum == _quantum;
+
+    // Ráfagas de la planificación del servicio; en modo demo se calculan igual con el TH actual.
+    private IReadOnlyList<ProcesoPlanificacionXml> Rafagas =>        _usarFalso
+            ? [.. CatalogoDeEjemplo.Procesos.Select(p => new ProcesoPlanificacionXml
+            {
+                Pid = p.Pid,
+                Nombre = p.Nombre,
+                Caracteres = p.Descripcion.Length,
+                RafagaMs = _thMs is > 0 ? Formulas.Rafaga(_thMs.Value, p.Descripcion.Length) : 0,
+                Prioridad = (int)p.Prioridad,
+            })]
+            : _planificacion?.Procesos ?? [];
 
     private string TextoEstado => _foto.Estado switch
     {
@@ -105,24 +214,148 @@
 
     protected override void OnInitialized()
     {
+        // El contenedor libera el ISimulador scoped con el circuito; aquí solo se retiran las suscripciones.
+        _usarFalso = Configuracion.GetValue<bool>("UsarSimuladorFalso");
         Actualizar();
         Simulador.CambioEstado += AlCambiarEstado;
         Simulador.SimulacionFinalizada += AlFinalizar;
         _refrescoReloj = new Timer(_ => RefrescarReloj(), null, MsRefrescoReloj, MsRefrescoReloj);
     }
 
-    private void Iniciar() => Ejecutar(() =>
+    protected override async Task OnInitializedAsync()
     {
-        // Cargar cada vez para tomar el TH y quantum actuales; tras Reiniciar o Finalizada también es válido.
-        Simulador.Cargar(CatalogoDeEjemplo.Procesos, new ConfiguracionSimulacion(_thMs!.Value, _quantum!.Value));
-        Simulador.Iniciar();
-    });
+        if (!_usarFalso)
+        {
+            await CargarCatalogosAsync();
+        }
+    }
+
+    private async Task IniciarAsync()
+    {
+        _mensajeError = null;
+        if (_usarFalso)
+        {
+            Ejecutar(() =>
+            {
+                // Cargar cada vez para tomar el TH y quantum actuales; tras Reiniciar o Finalizada también es válido.
+                Simulador.Cargar(CatalogoDeEjemplo.Procesos, new ConfiguracionSimulacion(_thMs!.Value, _quantum!.Value));
+                Simulador.Iniciar();
+            });
+            return;
+        }
+
+        if (_catalogoId is null)
+        {
+            _mensajeError = "Elige un catálogo de la lista para iniciar.";
+            return;
+        }
+
+        // Se recarga si cambió el catálogo, el TH o el quantum; tras Finalizada hay que Cargar de nuevo.
+        if (!CargaVigente || _foto.Estado == EstadoSimulacion.Finalizada)
+        {
+            await CargarSeleccionAsync();
+            if (_errorServicio is not null || _mensajeError is not null)
+            {
+                Actualizar();
+                return;
+            }
+        }
+
+        Ejecutar(Simulador.Iniciar);
+    }
 
     private void Pausar() => Ejecutar(Simulador.Pausar);
 
     private void Reanudar() => Ejecutar(Simulador.Reanudar);
 
     private void Reiniciar() => Ejecutar(Simulador.Reiniciar);
+
+    // El @bind:after del selector: precarga procesos y planificación para mostrar las ráfagas antes de Iniciar.
+    private async Task AlElegirCatalogoAsync()
+    {
+        if (_catalogoId is null || !ThValido || !QuantumValido)
+        {
+            _planificacion = null;
+            Actualizar();
+            return;
+        }
+
+        await CargarSeleccionAsync();
+        Actualizar();
+    }
+
+    private async Task ReintentarAsync()
+    {
+        if (_catalogos.Count == 0)
+        {
+            await CargarCatalogosAsync();
+        }
+
+        if (_catalogoId is not null && ThValido && QuantumValido)
+        {
+            await CargarSeleccionAsync();
+        }
+
+        Actualizar();
+    }
+
+    private async Task CargarCatalogosAsync()
+    {
+        _cargandoCatalogos = true;
+        _errorServicio = null;
+        try
+        {
+            _catalogos = (await Catalogos.ListarAsync()).Catalogos;
+        }
+        catch (ErrorServicioException ex)
+        {
+            _catalogos = [];
+            _errorServicio = MensajeAmable(ex);
+        }
+        finally
+        {
+            _cargandoCatalogos = false;
+        }
+    }
+
+    // Pide procesos y planificación con el TH y quantum del usuario y los deja cargados en el motor.
+    private async Task CargarSeleccionAsync()
+    {
+        _cargandoSeleccion = true;
+        _errorServicio = null;
+        _mensajeError = null;
+        try
+        {
+            var id = _catalogoId!.Value;
+            var th = _thMs!.Value;
+            var quantum = _quantum!.Value;
+            var catalogo = await Catalogos.ObtenerProcesosAsync(id);
+            var planificacion = await Catalogos.ObtenerPlanificacionAsync(id, th, quantum);
+            Simulador.Cargar(MapeoEntrada.AProcesosEntrada(catalogo), new ConfiguracionSimulacion(th, quantum));
+            _planificacion = planificacion;
+            _cargadoCatalogoId = id;
+            _cargadoTh = th;
+            _cargadoQuantum = quantum;
+        }
+        catch (ErrorServicioException ex)
+        {
+            _planificacion = null;
+            _errorServicio = MensajeAmable(ex);
+        }
+        catch (Exception ex) when (ex is InvalidDataException or InvalidOperationException)
+        {
+            // Contrato roto (prioridad inválida) o el motor cambió de estado entre el clic y la llamada.
+            _mensajeError = ex.Message;
+        }
+        finally
+        {
+            _cargandoSeleccion = false;
+        }
+    }
+
+    private static string MensajeAmable(ErrorServicioException ex) => ex.Codigo == 503
+        ? $"No pude contactar la Api REST: {ex.Message} Arráncala en otra terminal con dotnet run --project src/SimuladorProcesos.Api y comprueba http://localhost:5080/api/catalogos en el navegador. Luego pulsa Reintentar."
+        : $"El servicio REST falló ({ex.Codigo}): {ex.Message} Revisa la Api y pulsa Reintentar.";
 
     private void Ejecutar(Action accion)
     {
