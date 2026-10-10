@@ -410,6 +410,112 @@ public class SimuladorRoundRobinTests
     }
 
     [Fact]
+    public void Un_handler_que_lanza_no_detiene_la_simulacion_ni_a_los_demas_handlers()
+    {
+        var (procesos, quantum) = Catalogo("mezcla");
+        var (reporteEsperado, trazaEsperada) = ReferenciaSinHilos(procesos, quantum);
+        var traza = new List<string>();
+        using var simulador = new SimuladorRoundRobin(new DestinoEnMemoria());
+        using var fin = new ManualResetEventSlim();
+
+        // Los dos primeros suscriptores fallan; el tercero debe seguir recibiendo todo.
+        simulador.CambioEstado += (_, _) => throw new ObjectDisposedException("circuito cerrado");
+        simulador.CambioEstado += (_, e) => traza.Add(AuxiliarPlanificador.Formato(e));
+        simulador.SimulacionFinalizada += (_, _) => throw new InvalidOperationException("handler defectuoso");
+        simulador.SimulacionFinalizada += (_, _) => fin.Set();
+        simulador.Cargar(procesos, new ConfiguracionSimulacion(ThMs, quantum));
+
+        simulador.Iniciar();
+
+        Assert.True(fin.Wait(Limite), "La simulación no terminó con un handler que lanza.");
+        Assert.Equal(reporteEsperado, simulador.ObtenerReporte());
+        Assert.Equal(trazaEsperada, traza);
+    }
+
+    [Fact]
+    public void Un_destino_que_lanza_no_detiene_la_simulacion()
+    {
+        var (procesos, quantum) = Catalogo("mezcla");
+        var (reporteEsperado, _) = ReferenciaSinHilos(procesos, quantum);
+        using var simulador = Cargado(new QA.DestinoQueLanza(), procesos, quantum);
+
+        EjecutarHastaElFinal(simulador);
+
+        Assert.Equal(reporteEsperado, simulador.ObtenerReporte());
+    }
+
+    [Fact]
+    public void Un_fallo_inesperado_en_un_hilo_cancela_la_corrida_sin_colgar_a_los_demas_y_deja_reintentar()
+    {
+        var procesos = new[] { AuxiliarPlanificador.Proceso("Ana", Texto(300), Prioridad.Expulsivo) };
+        var (reporteEsperado, _) = ReferenciaSinHilos(procesos, 5);
+        using var simulador = Cargado(new DestinoEnMemoria(), procesos, 5);
+        simulador.Iniciar();
+        Esperar(() => simulador.ObtenerInstantanea().RelojMs >= 1, "El reloj no avanzó.");
+        var hilos = simulador.Hilos;
+
+        // Se provoca un fallo del propio motor (no de un handler ni del destino): un semáforo de turno liberado de golpe.
+        var corrida = typeof(SimuladorRoundRobin).GetField("_corrida", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(simulador)!;
+        var turnos = (SemaphoreSlim[])corrida.GetType().GetProperty("Turnos")!.GetValue(corrida)!;
+        turnos[0].Dispose();
+
+        Assert.All(hilos, hilo => Assert.True(hilo.Join(Limite), $"El hilo {hilo.Name} quedó esperando para siempre."));
+        Assert.Equal(EstadoSimulacion.Detenida, simulador.Estado);
+        Assert.Equal(0, simulador.ObtenerInstantanea().RelojMs);
+
+        EjecutarHastaElFinal(simulador);
+        Assert.Equal(reporteEsperado, simulador.ObtenerReporte());
+    }
+
+    [Fact]
+    public void Pausar_y_Reanudar_nunca_lanzan_NullReference_mientras_Reiniciar_y_Dispose_corren_en_paralelo()
+    {
+        var inesperadas = new List<Exception>();
+        for (var vuelta = 0; vuelta < 50; vuelta++)
+        {
+            var (procesos, quantum) = Catalogo("mezcla");
+            var simulador = Cargado(new DestinoEnMemoria(), procesos, quantum);
+            simulador.Iniciar();
+            var hilos = new[]
+            {
+                new Thread(() => Intentar(simulador.Reiniciar, inesperadas)),
+                new Thread(() => Intentar(simulador.Pausar, inesperadas)),
+                new Thread(() => Intentar(simulador.Reanudar, inesperadas)),
+                new Thread(() => Intentar(simulador.Reiniciar, inesperadas)),
+            };
+            foreach (var hilo in hilos)
+            {
+                hilo.Start();
+            }
+
+            Assert.All(hilos, hilo => Assert.True(hilo.Join(Limite)));
+            simulador.Dispose();
+        }
+
+        Assert.Empty(inesperadas);
+    }
+
+    // Lo único aceptable es lo documentado: InvalidOperationException por estado inválido o ObjectDisposedException.
+    private static void Intentar(Action accion, List<Exception> inesperadas)
+    {
+        try
+        {
+            accion();
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ObjectDisposedException)
+        {
+            // Respuesta válida de una operación que llegó en mal momento.
+        }
+        catch (Exception ex)
+        {
+            lock (inesperadas)
+            {
+                inesperadas.Add(ex);
+            }
+        }
+    }
+
+    [Fact]
     public void Dos_corridas_seguidas_no_mezclan_el_texto_de_la_anterior()
     {
         var (procesos, quantum) = Catalogo("expulsivos");
@@ -420,7 +526,7 @@ public class SimuladorRoundRobinTests
         simulador.Reiniciar();
         EjecutarHastaElFinal(simulador);
 
-        Assert.Equal(2, destino.Corridas);
+        Assert.Equal(3, destino.Corridas);
         Assert.All(procesos, p => Assert.Equal(p.Descripcion, destino.Texto(p.Pid)));
     }
 }

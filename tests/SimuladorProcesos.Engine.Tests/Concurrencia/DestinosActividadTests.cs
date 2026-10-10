@@ -60,8 +60,8 @@ public class DestinosActividadTests : IDisposable
     {
         using var destino = new DestinoArchivos(_carpeta);
 
-        foreach (var c in "hola") { destino.Escribir(1, "uno.exe", c); }
-        foreach (var c in "ñandú") { destino.Escribir(2, "dos", c); }
+        foreach (var c in "hola") { destino.Escribir(1, "uno.exe", c, CancellationToken.None); }
+        foreach (var c in "ñandú") { destino.Escribir(2, "dos", c, CancellationToken.None); }
 
         Assert.Equal("hola", LeerTexto(Path.Combine(_carpeta, "uno_1.txt")));
         Assert.Equal(Encoding.UTF8.GetBytes("ñandú"), LeerBytes(Path.Combine(_carpeta, "dos_2.txt")));
@@ -73,7 +73,7 @@ public class DestinosActividadTests : IDisposable
         const string descripcion = "a😀b";
         using var destino = new DestinoArchivos(_carpeta);
 
-        foreach (var c in descripcion) { destino.Escribir(3, "emoji", c); }
+        foreach (var c in descripcion) { destino.Escribir(3, "emoji", c, CancellationToken.None); }
 
         Assert.Equal(Encoding.UTF8.GetBytes(descripcion), LeerBytes(Path.Combine(_carpeta, "emoji_3.txt")));
     }
@@ -83,8 +83,8 @@ public class DestinosActividadTests : IDisposable
     {
         using var destino = new DestinoArchivos(_carpeta);
 
-        destino.Escribir(4, "vivo", 'x');
-        destino.Escribir(4, "vivo", 'y');
+        destino.Escribir(4, "vivo", 'x', CancellationToken.None);
+        destino.Escribir(4, "vivo", 'y', CancellationToken.None);
 
         Assert.Equal("xy", LeerTexto(Path.Combine(_carpeta, "vivo_4.txt")));
     }
@@ -93,10 +93,10 @@ public class DestinosActividadTests : IDisposable
     public void DestinoArchivos_empieza_de_cero_en_cada_corrida()
     {
         using var destino = new DestinoArchivos(_carpeta);
-        foreach (var c in "viejo texto") { destino.Escribir(1, "p", c); }
+        foreach (var c in "viejo texto") { destino.Escribir(1, "p", c, CancellationToken.None); }
 
         destino.NuevaCorrida();
-        foreach (var c in "nuevo") { destino.Escribir(1, "p", c); }
+        foreach (var c in "nuevo") { destino.Escribir(1, "p", c, CancellationToken.None); }
 
         Assert.Equal("nuevo", LeerTexto(Path.Combine(_carpeta, "p_1.txt")));
     }
@@ -109,10 +109,25 @@ public class DestinosActividadTests : IDisposable
     }
 
     [Fact]
+    public void Los_destinos_ignoran_lo_que_llega_con_la_corrida_cancelada()
+    {
+        using var cancelada = new CancellationTokenSource();
+        cancelada.Cancel();
+        var memoria = new DestinoEnMemoria();
+        using var archivos = new DestinoArchivos(_carpeta);
+
+        memoria.Escribir(1, "p", 'a', cancelada.Token);
+        archivos.Escribir(1, "p", 'a', cancelada.Token);
+
+        Assert.Equal(string.Empty, memoria.Texto(1));
+        Assert.False(File.Exists(Path.Combine(_carpeta, "p_1.txt")));
+    }
+
+    [Fact]
     public void DestinoEnMemoria_NuevaCorrida_borra_lo_escrito_y_cuenta_las_corridas()
     {
         var destino = new DestinoEnMemoria();
-        destino.Escribir(1, "p", 'a');
+        destino.Escribir(1, "p", 'a', CancellationToken.None);
         Assert.Equal("a", destino.Texto(1));
 
         destino.NuevaCorrida();

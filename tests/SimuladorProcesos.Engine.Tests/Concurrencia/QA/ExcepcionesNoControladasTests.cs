@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using SimuladorProcesos.Core.Modelos;
 using SimuladorProcesos.Engine.Actividad;
 using SimuladorProcesos.Engine.Tests.Planificacion;
@@ -14,7 +15,7 @@ namespace SimuladorProcesos.Engine.Tests.Concurrencia.QA;
 [Trait("Category", "QA-Aislado")]
 public class ExcepcionesNoControladasTests(ITestOutputHelper salida)
 {
-    private const string Variable = "QA_ESCENARIO";
+    private const string _variable = "QA_ESCENARIO";
 
     private static ProcesoEntrada[] Procesos() =>
     [
@@ -25,7 +26,7 @@ public class ExcepcionesNoControladasTests(ITestOutputHelper salida)
     [Fact]
     public void Disparador_handler_que_lanza()
     {
-        if (Environment.GetEnvironmentVariable(Variable) != "handler")
+        if (Environment.GetEnvironmentVariable(_variable) != "handler")
         {
             return;
         }
@@ -46,7 +47,7 @@ public class ExcepcionesNoControladasTests(ITestOutputHelper salida)
     [Fact]
     public void Disparador_destino_que_lanza()
     {
-        if (Environment.GetEnvironmentVariable(Variable) != "destino")
+        if (Environment.GetEnvironmentVariable(_variable) != "destino")
         {
             return;
         }
@@ -58,12 +59,21 @@ public class ExcepcionesNoControladasTests(ITestOutputHelper salida)
 
     private static void Fallar() => throw new ObjectDisposedException("Circuito Blazor ya cerrado (simulado por QA).");
 
+    // El ejecutable "dotnet" que corre esta prueba, hallado desde el runtime en uso: no depende del PATH ni del sistema operativo.
+    private static string RutaDotnet()
+    {
+        var nombre = OperatingSystem.IsWindows() ? "dotnet.exe" : "dotnet";
+        var desdeRuntime = Path.GetFullPath(Path.Combine(RuntimeEnvironment.GetRuntimeDirectory(), "..", "..", "..", nombre));
+        return File.Exists(desdeRuntime) ? desdeRuntime : "dotnet";
+    }
+
     [Theory]
     [InlineData("handler")]
     [InlineData("destino")]
+    [Trait("Category", "Concurrencia")]
     public async Task Lanzador_una_excepcion_en_un_hilo_del_motor_no_debe_derribar_el_host(string escenario)
     {
-        var inicio = new ProcessStartInfo("dotnet")
+        var inicio = new ProcessStartInfo(RutaDotnet())
         {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -73,12 +83,17 @@ public class ExcepcionesNoControladasTests(ITestOutputHelper salida)
         inicio.ArgumentList.Add(typeof(ExcepcionesNoControladasTests).Assembly.Location);
         inicio.ArgumentList.Add("--filter");
         inicio.ArgumentList.Add("FullyQualifiedName~Disparador_" + escenario);
-        inicio.Environment[Variable] = escenario;
+        inicio.Environment[_variable] = escenario;
 
         using var hijo = Process.Start(inicio)!;
         var salidaEstandar = hijo.StandardOutput.ReadToEndAsync();
         var salidaError = hijo.StandardError.ReadToEndAsync();
-        Assert.True(hijo.WaitForExit(180_000), "El host hijo no terminó.");
+        if (!hijo.WaitForExit(180_000))
+        {
+            hijo.Kill(entireProcessTree: true);
+            Assert.Fail("El host hijo no terminó.");
+        }
+
         var texto = await salidaEstandar + await salidaError;
         salida.WriteLine(texto);
 

@@ -142,9 +142,9 @@ internal sealed class DestinoConGancho(Action<int> trasEscribir) : IDestinoActiv
 
     public void NuevaCorrida() => _memoria.NuevaCorrida();
 
-    public void Escribir(int pid, string nombre, char caracter)
+    public void Escribir(int pid, string nombre, char caracter, CancellationToken cancelacion)
     {
-        _memoria.Escribir(pid, nombre, caracter);
+        _memoria.Escribir(pid, nombre, caracter, cancelacion);
         trasEscribir(Interlocked.Increment(ref _total));
     }
 }

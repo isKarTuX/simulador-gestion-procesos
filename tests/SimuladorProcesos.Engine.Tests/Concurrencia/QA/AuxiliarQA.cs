@@ -21,7 +21,7 @@ internal sealed class DestinoBloqueable : IDestinoActividad
 
     public string Texto(int pid) => _memoria.Texto(pid);
 
-    public void Escribir(int pid, string nombre, char caracter)
+    public void Escribir(int pid, string nombre, char caracter, CancellationToken cancelacion)
     {
         if (Interlocked.Exchange(ref _porBloquear, 0) == 1)
         {
@@ -29,7 +29,8 @@ internal sealed class DestinoBloqueable : IDestinoActividad
             Compuerta.Wait();
         }
 
-        _memoria.Escribir(pid, nombre, caracter);
+        // Al salir del bloqueo la memoria descarta el carácter si su corrida ya se canceló (contrato de IDestinoActividad).
+        _memoria.Escribir(pid, nombre, caracter, cancelacion);
     }
 }
 
@@ -40,5 +41,5 @@ internal sealed class DestinoQueLanza : IDestinoActividad
     {
     }
 
-    public void Escribir(int pid, string nombre, char caracter) => throw new IOException("Disco lleno (simulado por QA).");
+    public void Escribir(int pid, string nombre, char caracter, CancellationToken cancelacion) => throw new IOException("Disco lleno (simulado por QA).");
 }
