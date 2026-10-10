@@ -101,6 +101,61 @@
   color: #1a4fd6;
 }
 
+.nota {
+  margin: .5rem 0 0;
+  font-size: .85rem;
+  color: #4a4a4a;
+}
+
+.aviso-servicio {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #fff8e1;
+  border: 1px solid #e0a800;
+  border-radius: 8px;
+}
+
+.aviso-servicio p {
+  margin: 0 0 .75rem;
+}
+
+.rafagas {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #e3e3e3;
+  border-radius: 8px;
+}
+
+.rafagas summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.rafagas table {
+  width: 100%;
+  margin-top: .75rem;
+  border-collapse: collapse;
+  font-size: .9rem;
+}
+
+.rafagas th,
+.rafagas td {
+  padding: .4rem .6rem;
+  border-bottom: 1px solid #e3e3e3;
+  text-align: left;
+}
+
+.rafagas th {
+  color: #4a4a4a;
+  font-weight: 600;
+}
+
+.rafagas .vacia {
+  margin: .75rem 0 0;
+  color: #767676;
+}
+
 .bandas {
   margin-top: .5rem;
 }
