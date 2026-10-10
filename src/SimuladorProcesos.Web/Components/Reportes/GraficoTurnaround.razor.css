@@ -1,0 +1,16 @@
+/* Marco del gráfico Proceso vs TurnaRound; el lienzo ocupa el ancho disponible. */
+.grafico-turnaround {
+    width: 100%;
+    max-width: 48rem;
+    margin: 0 auto;
+}
+
+.grafico-turnaround canvas {
+    width: 100%;
+    min-height: 18rem;
+}
+
+.grafico-turnaround .sin-datos {
+    text-align: center;
+    color: #4b5563;
+}

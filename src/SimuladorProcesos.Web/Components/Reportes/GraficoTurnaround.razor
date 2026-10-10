@@ -1,10 +1,60 @@
-@* Gráfico de línea Proceso vs TurnaRound. Parámetros congelados; implementación con Chart.js: subtarea 3.2. *@
+@* Gráfico de línea Proceso vs TurnaRound con Chart.js local (subtarea 3.2). *@
+@inject IJSRuntime JS
+@implements IAsyncDisposable
 
 <div class="grafico-turnaround">
-    <p class="pendiente">Gráfico pendiente (subtarea 3.2): @Filas.Count procesos.</p>
+    @if (Filas.Count == 0)
+    {
+        <p class="sin-datos">Sin datos para graficar: ejecuta la simulación hasta el final.</p>
+    }
+    else
+    {
+        <canvas id="@_lienzoId" aria-label="Gráfico Proceso vs TurnaRound"></canvas>
+    }
 </div>
 
 @code {
     [Parameter, EditorRequired]
     public IReadOnlyList<FilaReporte> Filas { get; set; } = [];
+
+    private IJSObjectReference? _modulo;
+    private readonly string _lienzoId = $"grafico-turnaround-{Guid.NewGuid():N}";
+    private string _huella = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool primeraVez)
+    {
+        // El módulo se importa solo cuando el circuito ya tiene JS disponible.
+        _modulo ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/grafico.js");
+        if (Filas.Count == 0)
+        {
+            _huella = string.Empty;
+            await _modulo.InvokeVoidAsync("destruir", _lienzoId);
+            return;
+        }
+        var huella = string.Join("|", Filas.Select(f => $"{f.Proceso}:{f.Turnaround}"));
+        if (huella != _huella)
+        {
+            _huella = huella;
+            var etiquetas = Filas.Select(f => f.Proceso).ToArray();
+            var valores = Filas.Select(f => (double)f.Turnaround).ToArray();
+            await _modulo.InvokeVoidAsync("dibujar", _lienzoId, etiquetas, valores);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        // Libera el Chart del lienzo antes de soltar la referencia al módulo.
+        if (_modulo is not null)
+        {
+            try
+            {
+                await _modulo.InvokeVoidAsync("destruir", _lienzoId);
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+            await _modulo.DisposeAsync();
+        }
+        GC.SuppressFinalize(this);
+    }
 }
