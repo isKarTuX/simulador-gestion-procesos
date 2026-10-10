@@ -281,11 +281,11 @@ Los ejemplos completos están en [`docs/contrato/`](docs/contrato/) y se deseria
 - [x] Repartir módulos entre agentes (AGENTS.md, `.claude/agents/`, issues en GitHub).
 
 ### M1. Recolector de procesos (App 1)
-- [ ] Listar procesos y ordenar por memoria (`WorkingSet64`) o por CPU (medir dos muestras separadas ~500 ms).
+- [x] Listar procesos y ordenar por memoria (`WorkingSet64`) o por CPU (medir dos muestras separadas ~500 ms). (#35)
 - [ ] Obtener **usuario** por WMI; **descripción** por `FileVersionInfo.FileDescription` (respaldo: nombre).
-- [ ] Manejar `Access Denied` con try/catch y omitir el proceso sin romper.
+- [x] Manejar `Access Denied` con try/catch y omitir el proceso sin romper. (#35)
 - [x] Regla de prioridad (`Core/Reglas/ReglaPrioridad`): usuario SYSTEM / NT AUTHORITY / LOCAL SERVICE / NETWORK SERVICE → `1` (no expulsivo); el resto → `0` (expulsivo).
-- [ ] Devolver exactamente N procesos válidos (si se omiten por permisos, seguir hasta completar N).
+- [x] Devolver exactamente N procesos válidos (si se omiten por permisos, seguir hasta completar N). (#35)
 
 ### M2. Catálogos y listado (App 1)
 - [ ] Formulario: N, criterio (CPU/memoria), número de catálogo (consecutivo o digitado), nombre del catálogo.
