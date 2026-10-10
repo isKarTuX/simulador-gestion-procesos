@@ -1,16 +1,35 @@
-@* Banda horizontal de un estado. Parámetros congelados; estilo: subtarea 1.11. *@
+@* Banda horizontal de un estado. Parámetros congelados (los usa la página de simulación). *@
 
-<section class="banda @Clase">
-    <h2>@Titulo</h2>
+@{
+    // Se materializa una vez: Procesos puede ser una consulta diferida (p. ej. la vista Espera).
+    var lista = Procesos as IReadOnlyList<ProcesoInstantanea> ?? [.. Procesos];
+}
+
+<section class="banda @Clase" aria-labelledby="@_idTitulo">
+    <header class="banda-cabecera">
+        <h2 id="@_idTitulo">@Titulo</h2>
+        <span class="contador" title="Procesos en esta banda">@lista.Count</span>
+    </header>
+
     <div class="banda-procesos">
-        @foreach (var proceso in Procesos)
+        @if (lista.Count == 0)
         {
-            <TarjetaProceso @key="proceso.Pid" Proceso="proceso" />
+            <p class="vacia">Sin procesos</p>
+        }
+        else
+        {
+            @foreach (var proceso in lista)
+            {
+                <TarjetaProceso @key="proceso.Pid" Proceso="proceso" />
+            }
         }
     </div>
 </section>
 
 @code {
+    // Id único por instancia: la misma clase puede aparecer más de una vez en una página.
+    private readonly string _idTitulo = $"banda-{Guid.NewGuid():N}";
+
     [Parameter, EditorRequired]
     public string Titulo { get; set; } = string.Empty;
 

@@ -1,10 +1,20 @@
 @inherits LayoutComponentBase
 
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+
 <header class="encabezado">
-    <span class="marca">Simulador de Procesos</span>
-    <span class="subtitulo">Round Robin · Modelo de estados</span>
+    <div class="encabezado-interior">
+        <div class="identidad">
+            <span class="marca">Simulador de Procesos</span>
+            <span class="subtitulo">Round Robin · Modelo de estados</span>
+        </div>
+        <nav class="navegacion" aria-label="Principal">
+            <NavLink class="enlace-nav" ActiveClass="activo" href="" Match="NavLinkMatch.All">Simulación</NavLink>
+            <NavLink class="enlace-nav" ActiveClass="activo" href="reportes">Reportes</NavLink>
+        </nav>
+    </div>
 </header>
 
-<main class="contenido">
+<main id="contenido" class="contenido" tabindex="-1">
     @Body
 </main>

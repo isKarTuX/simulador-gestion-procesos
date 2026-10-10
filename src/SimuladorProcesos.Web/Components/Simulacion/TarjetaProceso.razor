@@ -1,11 +1,30 @@
-@* Tarjeta verde del enunciado. Parámetros congelados; estilo: subtarea 1.11. *@
+@* Tarjeta verde del enunciado: Procesos N, Pid, Quantum, Ejecuciones. Parámetro congelado. *@
 
-<div class="tarjeta-proceso">
-    <strong>Procesos @Proceso.Numero</strong>
+@{
+    var copiados = Math.Clamp(Proceso.CaracteresTotales - Proceso.CaracteresRestantes, 0, Math.Max(Proceso.CaracteresTotales, 0));
+    // Porcentaje entero: evita formatear decimales con la cultura del servidor dentro del style.
+    var porcentaje = Proceso.CaracteresTotales > 0 ? copiados * 100 / Proceso.CaracteresTotales : 0;
+    var noExpulsivo = Proceso.Prioridad == SimuladorProcesos.Core.Modelos.Prioridad.NoExpulsivo;
+}
+
+<article class="tarjeta-proceso @(Proceso.Estado == EstadoProceso.Ejecucion ? "ejecutando" : null)"
+         aria-label="Procesos @Proceso.Numero, Pid @Proceso.Pid">
+    <div class="tarjeta-titulo">
+        <strong>Procesos @Proceso.Numero</strong>
+        @if (noExpulsivo)
+        {
+            <abbr class="insignia-ne" title="No expulsivo: corre hasta terminar">NE</abbr>
+        }
+    </div>
     <span>Pid: @Proceso.Pid</span>
     <span>Quantum: @Proceso.Quantum</span>
     <span>Ejecuciones: @Proceso.Ejecuciones</span>
-</div>
+    <div class="progreso" role="progressbar" aria-label="Caracteres copiados"
+         aria-valuemin="0" aria-valuemax="@Proceso.CaracteresTotales" aria-valuenow="@copiados"
+         title="@copiados de @Proceso.CaracteresTotales caracteres">
+        <div class="progreso-relleno" style="width: @(porcentaje)%"></div>
+    </div>
+</article>
 
 @code {
     [Parameter, EditorRequired]

@@ -1,0 +1,52 @@
+@page "/demo-componentes"
+@using SimuladorProcesos.Core.Modelos
+
+<PageTitle>Demo de componentes</PageTitle>
+
+<h1 class="titulo-demo">Demo de bandas y tarjetas</h1>
+<p class="nota-demo">Datos fijos para revisar el estilo sin depender del simulador.</p>
+
+<BandaEstado Titulo="Listos" Clase="listos" Procesos="_listos" />
+<BandaEstado Titulo="Ejecución" Clase="ejecucion" Procesos="_ejecucion" />
+<BandaEstado Titulo="Espera" Clase="espera" Procesos="_espera" />
+<BandaEstado Titulo="Terminado" Clase="terminado" Procesos="_terminados" />
+
+<h2 class="subtitulo-demo">Banda vacía</h2>
+<BandaEstado Titulo="Terminado" Clase="terminado" Procesos="_vacia" />
+
+@code {
+    private static ProcesoInstantanea P(int numero, int pid, string nombre, Prioridad prioridad, EstadoProceso estado,
+        int quantum, int ejecuciones, int total, int restantes, bool espera = false) =>
+        new(numero, pid, nombre, prioridad, estado, quantum, ejecuciones, total, restantes, espera, 0, total * 100L,
+            estado == EstadoProceso.Terminado ? total * 100L : null);
+
+    private readonly IReadOnlyList<ProcesoInstantanea> _listos =
+    [
+        P(5, 5560, "notepad", Prioridad.Expulsivo, EstadoProceso.Listo, 5, 0, 13, 13),
+        P(6, 1024, "explorer", Prioridad.Expulsivo, EstadoProceso.Listo, 5, 0, 33, 33),
+        P(2, 4, "System", Prioridad.NoExpulsivo, EstadoProceso.Listo, 5, 0, 18, 18),
+    ];
+
+    private readonly IReadOnlyList<ProcesoInstantanea> _ejecucion =
+    [
+        P(1, 4120, "WINWORD", Prioridad.Expulsivo, EstadoProceso.Ejecucion, 5, 2, 24, 14),
+    ];
+
+    private readonly IReadOnlyList<ProcesoInstantanea> _espera =
+    [
+        P(3, 7312, "chrome", Prioridad.Expulsivo, EstadoProceso.Listo, 5, 1, 41, 36, espera: true),
+        P(4, 880, "svchost", Prioridad.NoExpulsivo, EstadoProceso.Listo, 5, 1, 17, 12, espera: true),
+        P(7, 2210, "spoolsv", Prioridad.Expulsivo, EstadoProceso.Listo, 5, 3, 28, 8, espera: true),
+        P(8, 3340, "taskmgr", Prioridad.Expulsivo, EstadoProceso.Listo, 5, 2, 20, 10, espera: true),
+        P(9, 6120, "calc", Prioridad.Expulsivo, EstadoProceso.Listo, 5, 4, 30, 5, espera: true),
+        P(10, 7788, "mspaint", Prioridad.NoExpulsivo, EstadoProceso.Listo, 5, 1, 22, 17, espera: true),
+    ];
+
+    private readonly IReadOnlyList<ProcesoInstantanea> _terminados =
+    [
+        P(11, 100, "init", Prioridad.NoExpulsivo, EstadoProceso.Terminado, 5, 1, 9, 0),
+        P(12, 101, "cron", Prioridad.Expulsivo, EstadoProceso.Terminado, 5, 3, 14, 0),
+    ];
+
+    private readonly IReadOnlyList<ProcesoInstantanea> _vacia = [];
+}

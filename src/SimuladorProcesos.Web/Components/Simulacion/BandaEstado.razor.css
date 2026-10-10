@@ -1,0 +1,55 @@
+.banda {
+    margin: 0 0 1.25rem;
+    /* El color de la banda se hereda en el título y el contador desde la clase de estado. */
+    --color-banda: var(--texto);
+}
+
+.banda.listos { --color-banda: var(--listos); }
+.banda.ejecucion { --color-banda: var(--ejecucion); }
+.banda.espera { --color-banda: var(--espera); }
+.banda.terminado { --color-banda: var(--terminado); }
+
+.banda-cabecera {
+    display: flex;
+    align-items: baseline;
+    gap: .6rem;
+    padding-bottom: .35rem;
+    border-bottom: 1px solid var(--linea);
+}
+
+.banda-cabecera h2 {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--color-banda);
+}
+
+.contador {
+    min-width: 1.5rem;
+    padding: 0 .45rem;
+    font-size: .8rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+    text-align: center;
+    color: var(--color-banda);
+    border: 1px solid var(--color-banda);
+    border-radius: 999px;
+}
+
+.banda-procesos {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: .75rem;
+    /* Altura mínima para que la página no salte cuando una banda se vacía o se llena. */
+    min-height: 6.75rem;
+    padding-top: .75rem;
+}
+
+.vacia {
+    margin: 0;
+    align-self: center;
+    font-size: .95rem;
+    font-style: italic;
+    color: var(--texto-tenue);
+}
