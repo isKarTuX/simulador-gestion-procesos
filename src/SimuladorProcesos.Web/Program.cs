@@ -12,7 +12,9 @@ var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5080";
 builder.Services.AddHttpClient<IClienteCatalogos, ClienteCatalogos>(cliente => cliente.BaseAddress = new Uri(apiBaseUrl));
 
 // Un simulador por circuito (pestaña): el contenedor lo libera con el circuito.
+// El nombre del catálogo vive en el mismo alcance porque ISimulador no lo transporta.
 // Motor real por defecto; "UsarSimuladorFalso": true solo para demos sin la Api.
+builder.Services.AddScoped<CatalogoActivo>();
 if (builder.Configuration.GetValue<bool>("UsarSimuladorFalso"))
 {
     builder.Services.AddScoped<ISimulador, SimuladorFalso>();
