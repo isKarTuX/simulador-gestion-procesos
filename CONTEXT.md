@@ -302,7 +302,7 @@ Los ejemplos completos están en [`docs/contrato/`](docs/contrato/) y se deseria
 - [x] Web API con formateador XML. (#37)
 - [x] Endpoints de la sección 5.2. (#37)
 - [x] Alojarlo embebido en la App 1 (Kestrel) o como proyecto aparte que lee la misma BD. (proyecto aparte, #37)
-- [ ] Probar con Postman **antes** de tocar la App 2.
+- [ ] Probar con Postman **antes** de tocar la App 2. *(con `curl` ya se verificó el XML en #65; falta abrirlo en Postman)*
 - [x] Manejo de errores: catálogo inexistente → 404 en XML. (#37)
 
 ### M5. Motor de simulación (App 2, núcleo)
@@ -439,13 +439,13 @@ Cada integrante debe poder responder:
 
 ## 11. Checklist final de entrega (lunes 19)
 
-- [ ] App 1 funciona con N procesos reales, ambos criterios (CPU y memoria). *(pruebas en verde; falta comprobar la ventana WPF a mano)*
+- [x] App 1 funciona con N procesos reales, ambos criterios (CPU y memoria). (#65: N=5 CPU y N=8 memoria en la ventana WPF; la actividad creó los 8 `.txt`)
 - [x] Catálogos persistidos en BD y accesibles por el servicio. (#34, #37; QA #32)
 - [x] REST devuelve XML válido en todos los endpoints. (#37; QA #32)
 - [x] App 2 simula Round Robin correctamente con hilos. (#44, #46, #60)
-- [ ] Pausa y reinicio funcionan en cualquier momento. *(motor probado en #46/#60; faltan los clics reales en la GUI)*
-- [ ] GUI con los 4 paneles y tarjetas actualizadas en vivo. *(#42, #57; falta verlo en el navegador)*
-- [ ] Reportes y gráfico correctos. *(#54, #55, #62; falta verlo en el navegador)*
+- [x] Pausa y reinicio funcionan en cualquier momento. (#46, #60; #65: botones de la GUI, el reloj se congela en pausa y Reiniciar a mitad vuelve a 0 ms)
+- [x] GUI con los 4 paneles y tarjetas actualizadas en vivo. (#42, #57; #65: capturada con las 4 bandas ocupadas a la vez)
+- [x] Reportes y gráfico correctos. (#54, #55, #62; #65: tablas, gráfico de 8 puntos y anexos vistos en el navegador)
 - [x] Pruebas unitarias en verde. (CI de `main`)
 - [x] README, diagramas y notas de sustentación listos. (#61, #52, #53, #56)
 - [ ] Demo ensayada de principio a fin al menos dos veces.
