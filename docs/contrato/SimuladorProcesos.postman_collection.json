@@ -1,0 +1,144 @@
+{
+  "info": {
+    "name": "Simulador de procesos · servicio REST XML",
+    "description": "Mismas peticiones que src/SimuladorProcesos.Api/SimuladorProcesos.Api.http, con pruebas de estado y tipo de contenido. Requisito: la Api corriendo (dotnet run --project src/SimuladorProcesos.Api) y al menos un catálogo creado con la App 1. Ajusta la variable catalogoId al id que devuelve GET /api/catalogos (el atributo id, no numero).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "api", "value": "http://localhost:5080" },
+    { "key": "catalogoId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Listar catálogos (200)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/xml" }],
+        "url": "{{api}}/api/catalogos"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('200', () => pm.response.to.have.status(200));",
+        "pm.test('application/xml', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/xml'));",
+        "pm.test('raíz <Catalogos>', () => pm.expect(pm.response.text()).to.include('<Catalogos'));"
+      ] } }]
+    },
+    {
+      "name": "Procesos de un catálogo (200)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/xml" }],
+        "url": "{{api}}/api/catalogos/{{catalogoId}}/procesos"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('200', () => pm.response.to.have.status(200));",
+        "pm.test('application/xml', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/xml'));",
+        "pm.test('raíz <Catalogo> con <Proceso>', () => { const t = pm.response.text(); pm.expect(t).to.include('<Catalogo'); pm.expect(t).to.include('<Proceso>'); });"
+      ] } }]
+    },
+    {
+      "name": "Catálogo inexistente (404 <Error>)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/xml" }],
+        "url": "{{api}}/api/catalogos/99999/procesos"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('404', () => pm.response.to.have.status(404));",
+        "pm.test('application/xml', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/xml'));",
+        "pm.test('cuerpo <Error>', () => pm.expect(pm.response.text()).to.include('<Error'));"
+      ] } }]
+    },
+    {
+      "name": "Planificación con TH y quantum explícitos (200)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/xml" }],
+        "url": {
+          "raw": "{{api}}/api/planificacion/{{catalogoId}}?th=100&quantum=5",
+          "host": ["{{api}}"],
+          "path": ["api", "planificacion", "{{catalogoId}}"],
+          "query": [{ "key": "th", "value": "100" }, { "key": "quantum", "value": "5" }]
+        }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('200', () => pm.response.to.have.status(200));",
+        "pm.test('raíz <Planificacion>', () => pm.expect(pm.response.text()).to.include('<Planificacion'));"
+      ] } }]
+    },
+    {
+      "name": "Planificación con valores por defecto (200)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/xml" }],
+        "url": "{{api}}/api/planificacion/{{catalogoId}}"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('200', () => pm.response.to.have.status(200));",
+        "pm.test('raíz <Planificacion>', () => pm.expect(pm.response.text()).to.include('<Planificacion'));"
+      ] } }]
+    },
+    {
+      "name": "Planificación de catálogo inexistente (404 <Error>)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/xml" }],
+        "url": "{{api}}/api/planificacion/99999"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('404', () => pm.response.to.have.status(404));",
+        "pm.test('cuerpo <Error>', () => pm.expect(pm.response.text()).to.include('<Error'));"
+      ] } }]
+    },
+    {
+      "name": "TH no positivo (400 <Error>)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/xml" }],
+        "url": {
+          "raw": "{{api}}/api/planificacion/{{catalogoId}}?th=0&quantum=5",
+          "host": ["{{api}}"],
+          "path": ["api", "planificacion", "{{catalogoId}}"],
+          "query": [{ "key": "th", "value": "0" }, { "key": "quantum", "value": "5" }]
+        }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('400', () => pm.response.to.have.status(400));",
+        "pm.test('cuerpo <Error>', () => pm.expect(pm.response.text()).to.include('<Error'));"
+      ] } }]
+    },
+    {
+      "name": "Quantum no positivo (400 <Error>)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/xml" }],
+        "url": {
+          "raw": "{{api}}/api/planificacion/{{catalogoId}}?th=100&quantum=-1",
+          "host": ["{{api}}"],
+          "path": ["api", "planificacion", "{{catalogoId}}"],
+          "query": [{ "key": "th", "value": "100" }, { "key": "quantum", "value": "-1" }]
+        }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('400', () => pm.response.to.have.status(400));",
+        "pm.test('cuerpo <Error>', () => pm.expect(pm.response.text()).to.include('<Error'));"
+      ] } }]
+    },
+    {
+      "name": "TH que no es entero (400 <Error>)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/xml" }],
+        "url": {
+          "raw": "{{api}}/api/planificacion/{{catalogoId}}?th=abc",
+          "host": ["{{api}}"],
+          "path": ["api", "planificacion", "{{catalogoId}}"],
+          "query": [{ "key": "th", "value": "abc" }]
+        }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('400', () => pm.response.to.have.status(400));",
+        "pm.test('cuerpo <Error>', () => pm.expect(pm.response.text()).to.include('<Error'));"
+      ] } }]
+    }
+  ]
+}

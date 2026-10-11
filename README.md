@@ -122,6 +122,8 @@ curl -H "Accept: application/xml" http://localhost:5080/api/catalogos
 
 Respuesta esperada: `200` con `Content-Type: application/xml` y un cuerpo `<Catalogos />` (vacío si aún no hay catálogos) o con un `<Catalogo>` por catálogo. Un id inexistente devuelve `404` en XML: `curl -H "Accept: application/xml" http://localhost:5080/api/catalogos/9999/procesos`.
 
+Para probar todos los endpoints a la vez, importa en Postman [`docs/contrato/SimuladorProcesos.postman_collection.json`](docs/contrato/SimuladorProcesos.postman_collection.json) y ajusta la variable `catalogoId` al `id` que devuelve `/api/catalogos`. Por consola: `npx -y newman@6.2.1 run docs/contrato/SimuladorProcesos.postman_collection.json --env-var catalogoId=<id>` (verificado: 9 peticiones, 21 aserciones, 0 fallos).
+
 2. Arrancar la Web (terminal 2) y abrirla en el navegador:
 
 ```bash
