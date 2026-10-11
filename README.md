@@ -94,12 +94,14 @@ Diagramas exportados a PNG con `npx -y @mermaid-js/mermaid-cli@12.0.0` (fondo bl
 
 Fuente Mermaid de los tres: [docs/diagramas.md](docs/diagramas.md).
 
-> **Capturas de las apps (pendientes):** este entorno no tiene ventana WPF ni navegador, así que no se generaron capturas reales y no se inventó ninguna. Quedan para el humano, con pasos exactos:
->
-> 1. `docs/img/app1-catalogo.png`: `dotnet run --project src/SimuladorProcesos.Desktop`, crear un catálogo (N = 5, criterio CPU, número consecutivo, nombre descriptivo) y capturar la ventana con el grid de procesos lleno.
-> 2. `docs/img/api-catalogos-xml.png`: con la Api corriendo, abrir `http://localhost:5080/api/catalogos` en el navegador y capturar el XML.
-> 3. `docs/img/web-simulacion-mitad.png`: con Api y Web corriendo, iniciar una simulación con un catálogo mixto y capturarla a mitad, con las 4 bandas (Listos, Ejecución, Espera, Terminado) ocupadas.
-> 4. `docs/img/web-reportes.png`: al terminar la simulación, abrir `/reportes` y capturar las tablas más el gráfico Proceso vs TurnaRound.
+Capturas reales de las apps (Windows 11, 10/10/2026, catálogo «Demo Memoria 8» creado con la App 1 a partir de procesos del propio equipo):
+
+| App | Captura |
+|---|---|
+| App 1 · catálogo guardado y actividad al 100 % | ![App 1](docs/img/app1-catalogo.png) |
+| Api · XML de `/api/catalogos/4/procesos` | ![XML de la Api](docs/img/api-catalogos-xml.png) |
+| Web · simulación a mitad, con las 4 bandas ocupadas | ![Simulación a mitad](docs/img/web-simulacion-mitad.png) |
+| Web · `/reportes` con tablas, gráfico y anexos | ![Reportes](docs/img/web-reportes.png) |
 
 ## Demo en 5 minutos
 
