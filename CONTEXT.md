@@ -281,29 +281,29 @@ Los ejemplos completos están en [`docs/contrato/`](docs/contrato/) y se deseria
 - [x] Repartir módulos entre agentes (AGENTS.md, `.claude/agents/`, issues en GitHub).
 
 ### M1. Recolector de procesos (App 1)
-- [ ] Listar procesos y ordenar por memoria (`WorkingSet64`) o por CPU (medir dos muestras separadas ~500 ms).
-- [ ] Obtener **usuario** por WMI; **descripción** por `FileVersionInfo.FileDescription` (respaldo: nombre).
-- [ ] Manejar `Access Denied` con try/catch y omitir el proceso sin romper.
+- [x] Listar procesos y ordenar por memoria (`WorkingSet64`) o por CPU (medir dos muestras separadas ~500 ms). (#35)
+- [x] Obtener **usuario** por WMI; **descripción** por `FileVersionInfo.FileDescription` (respaldo: nombre). (#41)
+- [x] Manejar `Access Denied` con try/catch y omitir el proceso sin romper. (#35, #41)
 - [x] Regla de prioridad (`Core/Reglas/ReglaPrioridad`): usuario SYSTEM / NT AUTHORITY / LOCAL SERVICE / NETWORK SERVICE → `1` (no expulsivo); el resto → `0` (expulsivo).
-- [ ] Devolver exactamente N procesos válidos (si se omiten por permisos, seguir hasta completar N).
+- [x] Devolver exactamente N procesos válidos (si se omiten por permisos, seguir hasta completar N). (#35)
 
 ### M2. Catálogos y listado (App 1)
-- [ ] Formulario: N, criterio (CPU/memoria), número de catálogo (consecutivo o digitado), nombre del catálogo.
-- [ ] Guardar en BD.
-- [ ] Grid con el listado de procesos obtenidos.
-- [ ] Validaciones: N > 0, nombre no vacío, número no repetido.
+- [x] Formulario: N, criterio (CPU/memoria), número de catálogo (consecutivo o digitado), nombre del catálogo. (#45, #58)
+- [x] Guardar en BD. (#34, #58)
+- [x] Grid con el listado de procesos obtenidos. (#45)
+- [x] Validaciones: N > 0, nombre no vacío, número no repetido. (#45)
 
 ### M3. Actividad del proceso (App 1)
-- [ ] Crear en una carpeta de trabajo un archivo `<nombre_saneado>.txt` (extensión `.txt` siempre; quitar caracteres inválidos; evitar escribir `chrome.exe`).
-- [ ] Copiar la descripción **carácter por carácter**, esperando TH ms entre caracteres.
-- [ ] Cada carácter consume un quantum.
+- [x] Crear en una carpeta de trabajo un archivo `<nombre_saneado>.txt` (extensión `.txt` siempre; quitar caracteres inválidos; evitar escribir `chrome.exe`). (#43)
+- [x] Copiar la descripción **carácter por carácter**, esperando TH ms entre caracteres. (#43)
+- [x] Cada carácter consume un quantum. (#43, #46)
 
 ### M4. Servicio REST XML
-- [ ] Web API con formateador XML.
-- [ ] Endpoints de la sección 5.2.
-- [ ] Alojarlo embebido en la App 1 (Kestrel) o como proyecto aparte que lee la misma BD.
+- [x] Web API con formateador XML. (#37)
+- [x] Endpoints de la sección 5.2. (#37)
+- [x] Alojarlo embebido en la App 1 (Kestrel) o como proyecto aparte que lee la misma BD. (proyecto aparte, #37)
 - [ ] Probar con Postman **antes** de tocar la App 2.
-- [ ] Manejo de errores: catálogo inexistente → 404 en XML.
+- [x] Manejo de errores: catálogo inexistente → 404 en XML. (#37)
 
 ### M5. Motor de simulación (App 2, núcleo)
 **Estructuras dinámicas propias (no solo `List<T>`):**
@@ -353,33 +353,33 @@ repetir limite veces:
 - **Reinicio:** cancelar hilos, vaciar colas, recargar el catálogo desde el servicio.
 
 ### M6. GUI web
-- [ ] Cuatro paneles: Listos (azul), Ejecución (verde), Espera (gris), Terminado (rojo).
-- [ ] Tarjeta por proceso: `Procesos N · Pid · Quantum · Ejecuciones`.
-- [ ] Controles: seleccionar catálogo, TH, quantum, **Iniciar / Pausar / Reanudar / Reiniciar**.
-- [ ] Actualización en vivo con SignalR (el motor emite eventos de cambio de estado).
+- [x] Cuatro paneles: Listos (azul), Ejecución (verde), Espera (gris), Terminado (rojo). (#42)
+- [x] Tarjeta por proceso: `Procesos N · Pid · Quantum · Ejecuciones`. (#42)
+- [x] Controles: seleccionar catálogo, TH, quantum, **Iniciar / Pausar / Reanudar / Reiniciar**. (#57)
+- [x] Actualización en vivo con SignalR (el motor emite eventos de cambio de estado). (Blazor Server, #57)
 
 ### M7. Reportes
-- [ ] Tabla "Listado de ejecución" (P, T.L, R, P.R, T.R, T.F).
-- [ ] Misma tabla filtrada a **no expulsivos**.
-- [ ] Gráfico de línea **Proceso vs TurnaRound** (Chart.js).
-- [ ] Sección "Anexos y observaciones".
+- [x] Tabla "Listado de ejecución" (P, T.L, R, P.R, T.R, T.F). (#54)
+- [x] Misma tabla filtrada a **no expulsivos**. (#54)
+- [x] Gráfico de línea **Proceso vs TurnaRound** (Chart.js). (#55)
+- [x] Sección "Anexos y observaciones". (#54)
 
 ### M8. Pruebas y documentación
 **Casos de prueba**
-- [ ] Todos expulsivos.
-- [ ] Todos no expulsivos.
-- [ ] Mezcla de ambos.
-- [ ] Un solo proceso.
-- [ ] Descripción vacía.
-- [ ] Pausar y reiniciar a mitad de la simulación.
-- [ ] Catálogo con 1 y con muchos procesos.
+- [x] Todos expulsivos. (#60; QA en #32)
+- [x] Todos no expulsivos. (#60; QA en #32)
+- [x] Mezcla de ambos. (#60; QA en #32)
+- [x] Un solo proceso. (#60; QA en #32)
+- [x] Descripción vacía. (#60; QA en #32)
+- [x] Pausar y reiniciar a mitad de la simulación. (#60; QA en #32)
+- [x] Catálogo con 1 y con muchos procesos. (#60; QA en #32)
 
 **Documentación**
 - [x] Diagrama de estados (`docs/diagramas.md`).
 - [x] Diagrama de arquitectura.
 - [x] Diagrama de secuencia del dispatcher.
-- [ ] README con cómo correr cada app.
-- [ ] Notas de sustentación (sección 9).
+- [x] README con cómo correr cada app. (#61)
+- [x] Notas de sustentación (sección 9). (#52, #53, #56)
 
 ---
 
@@ -439,15 +439,15 @@ Cada integrante debe poder responder:
 
 ## 11. Checklist final de entrega (lunes 19)
 
-- [ ] App 1 funciona con N procesos reales, ambos criterios (CPU y memoria).
-- [ ] Catálogos persistidos en BD y accesibles por el servicio.
-- [ ] REST devuelve XML válido en todos los endpoints.
-- [ ] App 2 simula Round Robin correctamente con hilos.
-- [ ] Pausa y reinicio funcionan en cualquier momento.
-- [ ] GUI con los 4 paneles y tarjetas actualizadas en vivo.
-- [ ] Reportes y gráfico correctos.
-- [ ] Pruebas unitarias en verde.
-- [ ] README, diagramas y notas de sustentación listos.
+- [ ] App 1 funciona con N procesos reales, ambos criterios (CPU y memoria). *(pruebas en verde; falta comprobar la ventana WPF a mano)*
+- [x] Catálogos persistidos en BD y accesibles por el servicio. (#34, #37; QA #32)
+- [x] REST devuelve XML válido en todos los endpoints. (#37; QA #32)
+- [x] App 2 simula Round Robin correctamente con hilos. (#44, #46, #60)
+- [ ] Pausa y reinicio funcionan en cualquier momento. *(motor probado en #46/#60; faltan los clics reales en la GUI)*
+- [ ] GUI con los 4 paneles y tarjetas actualizadas en vivo. *(#42, #57; falta verlo en el navegador)*
+- [ ] Reportes y gráfico correctos. *(#54, #55, #62; falta verlo en el navegador)*
+- [x] Pruebas unitarias en verde. (CI de `main`)
+- [x] README, diagramas y notas de sustentación listos. (#61, #52, #53, #56)
 - [ ] Demo ensayada de principio a fin al menos dos veces.
 
 ---
