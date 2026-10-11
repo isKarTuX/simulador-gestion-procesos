@@ -82,6 +82,68 @@ Pruebas:
 dotnet test SimuladorProcesos.slnx
 ```
 
+## Capturas
+
+Diagramas exportados a PNG con `npx -y @mermaid-js/mermaid-cli@12.0.0` (fondo blanco, escala 2, todos ≤ 300 KB):
+
+| Diagrama | PNG |
+|---|---|
+| Modelo de estados | ![Modelo de estados](docs/img/diagrama-estados.png) |
+| Arquitectura | ![Arquitectura](docs/img/diagrama-arquitectura.png) |
+| Secuencia del dispatcher | ![Secuencia del dispatcher](docs/img/diagrama-secuencia.png) |
+
+Fuente Mermaid de los tres: [docs/diagramas.md](docs/diagramas.md).
+
+> **Capturas de las apps (pendientes):** este entorno no tiene ventana WPF ni navegador, así que no se generaron capturas reales y no se inventó ninguna. Quedan para el humano, con pasos exactos:
+>
+> 1. `docs/img/app1-catalogo.png`: `dotnet run --project src/SimuladorProcesos.Desktop`, crear un catálogo (N = 5, criterio CPU, número consecutivo, nombre descriptivo) y capturar la ventana con el grid de procesos lleno.
+> 2. `docs/img/api-catalogos-xml.png`: con la Api corriendo, abrir `http://localhost:5080/api/catalogos` en el navegador y capturar el XML.
+> 3. `docs/img/web-simulacion-mitad.png`: con Api y Web corriendo, iniciar una simulación con un catálogo mixto y capturarla a mitad, con las 4 bandas (Listos, Ejecución, Espera, Terminado) ocupadas.
+> 4. `docs/img/web-reportes.png`: al terminar la simulación, abrir `/reportes` y capturar las tablas más el gráfico Proceso vs TurnaRound.
+
+## Demo en 5 minutos
+
+Todos los comandos de abajo se ejecutaron y verificaron el 11/10/2026 (`dotnet --version` → `10.0.401`).
+
+0. Compilar (0 advertencias, 0 errores):
+
+```bash
+dotnet build SimuladorProcesos.slnx
+```
+
+1. Arrancar la Api (terminal 1) y comprobar que responde XML:
+
+```bash
+dotnet run --project src/SimuladorProcesos.Api
+curl -H "Accept: application/xml" http://localhost:5080/api/catalogos
+```
+
+Respuesta esperada: `200` con `Content-Type: application/xml` y un cuerpo `<Catalogos />` (vacío si aún no hay catálogos) o con un `<Catalogo>` por catálogo. Un id inexistente devuelve `404` en XML: `curl -H "Accept: application/xml" http://localhost:5080/api/catalogos/9999/procesos`.
+
+2. Arrancar la Web (terminal 2) y abrirla en el navegador:
+
+```bash
+dotnet run --project src/SimuladorProcesos.Web
+```
+
+Abrir `http://localhost:5090` (verificado: responde `200` con el HTML de Blazor). Si la Api está apagada, la página muestra un aviso amable con botón Reintentar.
+
+3. Crear un catálogo (terminal 3, requiere Windows con interfaz gráfica):
+
+```bash
+dotnet run --project src/SimuladorProcesos.Desktop
+```
+
+En la App de escritorio: N = 5, criterio CPU, número consecutivo, nombre descriptivo → Capturar → Guardar. Repite con N = 8 y criterio memoria para tener dos catálogos.
+
+4. Simular: en la Web elige el catálogo, define TH = 100 ms y quantum = 5, e Inicia. Prueba Pausar (el reloj se congela), Reanudar y Reiniciar a mitad sin errores en consola. Al terminar, abre `/reportes`: listado de ejecución, listado de no expulsivos, gráfico Proceso vs TurnaRound y anexos (TF del enunciado vs TF real).
+
+5. Correr las pruebas (opcional, todo en verde: 409 passed, 0 failed):
+
+```bash
+dotnet test SimuladorProcesos.slnx
+```
+
 ## Documentación
 
 - [Requisitos, contrato y decisiones](CONTEXT.md)
