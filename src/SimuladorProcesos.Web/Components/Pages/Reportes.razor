@@ -4,6 +4,7 @@
 @using SimuladorProcesos.Web.Simulacion
 @implements IDisposable
 @inject ISimulador Simulador
+@inject CatalogoActivo Catalogo
 
 @* Página de reportes (M7): lee el mismo ISimulador scoped del circuito que la simulación. *@
 
@@ -41,8 +42,8 @@ else
 }
 
 @code {
-  // La simulación solo ofrece el catálogo de ejemplo hasta que 2.3 conecte la selección por REST.
-  private readonly string _catalogo = CatalogoDeEjemplo.Nombre;
+  // El nombre lo guarda Home al pulsar Iniciar; sin Iniciar previo se muestra el de ejemplo.
+  private string _catalogo => Catalogo.Nombre ?? CatalogoDeEjemplo.Nombre;
 
   private InstantaneaSimulacion _foto = new(EstadoSimulacion.Detenida, 0, [], null, []);
   private IReadOnlyList<FilaReporte> _filas = [];

@@ -4,6 +4,7 @@
 @using SimuladorProcesos.Web.Simulacion
 @implements IDisposable
 @inject ISimulador Simulador
+@inject CatalogoActivo Catalogo
 @inject IClienteCatalogos Catalogos
 @inject IConfiguration Configuracion
 
@@ -239,6 +240,7 @@
             {
                 // Cargar cada vez para tomar el TH y quantum actuales; tras Reiniciar o Finalizada también es válido.
                 Simulador.Cargar(CatalogoDeEjemplo.Procesos, new ConfiguracionSimulacion(_thMs!.Value, _quantum!.Value));
+                Catalogo.Nombre = CatalogoDeEjemplo.Nombre;
                 Simulador.Iniciar();
             });
             return;
@@ -332,6 +334,8 @@
             var catalogo = await Catalogos.ObtenerProcesosAsync(id);
             var planificacion = await Catalogos.ObtenerPlanificacionAsync(id, th, quantum);
             Simulador.Cargar(MapeoEntrada.AProcesosEntrada(catalogo), new ConfiguracionSimulacion(th, quantum));
+            // La respuesta REST trae el nombre del catálogo que se acaba de cargar en el motor.
+            Catalogo.Nombre = catalogo.Nombre;
             _planificacion = planificacion;
             _cargadoCatalogoId = id;
             _cargadoTh = th;
